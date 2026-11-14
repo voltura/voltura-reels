@@ -1,5 +1,5 @@
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-export const tenth = value => Math.round(value * 10) / 10;
+export const tenth = (value) => Math.round(value * 10) / 10;
 
 export function timeText(value, decimals = true) {
   const time = Math.max(0, Math.floor(value * (decimals ? 10 : 1) + 0.001));

@@ -35,7 +35,8 @@ html[data-voltura-reel-fullscreen] [data-voltura-reel-video] {
   object-position: center !important;
   clip-path: none !important;
   transform-origin: center !important;
-  transform: translate3d(var(--voltura-pan-x, 0px), var(--voltura-pan-y, 0px), 0) scale(var(--voltura-zoom, 1)) !important;
+  transform: translate3d(var(--voltura-pan-x, 0px), var(--voltura-pan-y, 0px), 0)
+    scale(var(--voltura-zoom, 1)) !important;
   visibility: visible !important;
   pointer-events: none !important;
   z-index: 2147483645 !important;

@@ -1,7 +1,8 @@
-import { cpSync, mkdirSync } from 'node:fs';
+import { cpSync, mkdirSync, rmSync } from 'node:fs';
 import { build } from 'esbuild';
 
 mkdirSync('dist', { recursive: true });
+rmSync('dist/extension', { recursive: true, force: true });
 cpSync('extension', 'dist/extension', { recursive: true });
 await build({
   entryPoints: ['src/content.js'],

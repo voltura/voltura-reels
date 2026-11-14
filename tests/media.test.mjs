@@ -7,8 +7,8 @@ import { languages, resolveLanguage, translator } from '../extension/languages.j
 test('relative seeking crosses gaps in the requested direction', () => {
   const ranges = {
     length: 2,
-    start: index => [2, 9][index],
-    end: index => [5, 20][index],
+    start: (index) => [2, 9][index],
+    end: (index) => [5, 20][index],
   };
   assert.equal(seekTarget(ranges, 6, 1), 9);
   assert.equal(seekTarget(ranges, 6, -1), 5);

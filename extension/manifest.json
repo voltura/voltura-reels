@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Voltura Reel Player",
-  "version": "0.2.11",
+  "version": "1.0.0",
+  "minimum_chrome_version": "120",
   "description": "Fullscreen playback controls for Facebook Reels.",
   "homepage_url": "https://reels.voltura.se/",
   "permissions": ["storage"],
@@ -21,10 +22,12 @@
     }
   },
   "background": { "service_worker": "background.js", "type": "module" },
-  "content_scripts": [{
-    "matches": ["https://www.facebook.com/*", "https://facebook.com/*"],
-    "js": ["content.js"],
-    "css": ["facebook.css"],
-    "run_at": "document_idle"
-  }]
+  "content_scripts": [
+    {
+      "matches": ["https://www.facebook.com/*", "https://facebook.com/*"],
+      "js": ["content.js"],
+      "css": ["facebook.css"],
+      "run_at": "document_idle"
+    }
+  ]
 }

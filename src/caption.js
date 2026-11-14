@@ -1,9 +1,11 @@
-const urlPattern = /(?<![\p{L}\p{N}@._/:-])(?:https?:\/\/[^\s<>"“”‘’…]+|(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?\.)+[\p{L}]{2,}(?::\d+)?(?:[/?#][^\s<>"“”‘’…]*)?)/giu;
+const urlPattern =
+  /(?<![\p{L}\p{N}@._/:-])(?:https?:\/\/[^\s<>"“”‘’…]+|(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?\.)+[\p{L}]{2,}(?::\d+)?(?:[/?#][^\s<>"“”‘’…]*)?)/giu;
 const brackets = { ')': '(', ']': '[' };
 
-export function webLink(value) {
+export function webLink(value, base) {
+  if (!value) return undefined;
   try {
-    const url = new URL(value);
+    const url = new URL(value, base);
     if (['https:', 'http:'].includes(url.protocol) && !url.username && !url.password) return url.href;
   } catch {
     return undefined;

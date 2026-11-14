@@ -1,4 +1,12 @@
-import { defaultTheme, iconFilters, playerSetting, playerSettings, themeKey, themeNames, validTheme } from './preferences.js';
+import {
+  defaultTheme,
+  iconFilters,
+  playerSetting,
+  playerSettings,
+  themeKey,
+  themeNames,
+  validTheme,
+} from './preferences.js';
 import { languageKey, languages, resolveLanguage, translator } from './languages.js';
 
 const select = document.querySelector('#theme');
@@ -15,17 +23,22 @@ function setStatus(key) {
 }
 
 function flag(image, code) {
-  image.src = `flags/${languages.find(item => item.code === code).flag}.svg`;
+  image.src = `flags/${languages.find((item) => item.code === code).flag}.svg`;
 }
 
 function showLanguage() {
   const locale = resolveLanguage(language);
   const text = translator(locale);
   document.documentElement.lang = locale;
-  for (const element of document.querySelectorAll('[data-message]')) element.textContent = text(element.dataset.message);
+  for (const element of document.querySelectorAll('[data-message]'))
+    element.textContent = text(element.dataset.message);
   const automatic = resolveLanguage('auto');
-  const automaticName = text('Automatic ({0})').replace('{0}', languages.find(item => item.code === automatic).name);
-  document.querySelector('#language-current').textContent = language === 'auto' ? automaticName : languages.find(item => item.code === locale).name;
+  const automaticName = text('Automatic ({0})').replace(
+    '{0}',
+    languages.find((item) => item.code === automatic).name,
+  );
+  document.querySelector('#language-current').textContent =
+    language === 'auto' ? automaticName : languages.find((item) => item.code === locale).name;
   flag(trigger.querySelector('img'), locale);
   for (const button of options.querySelectorAll('button')) {
     const code = button.dataset.language;
@@ -76,10 +89,11 @@ for (const item of [{ code: 'auto', name: '' }, ...languages]) {
   options.append(button);
 }
 trigger.addEventListener('click', () => openLanguages(options.hidden, !options.hidden));
-document.addEventListener('pointerdown', event => {
-  if (!options.hidden && !options.contains(event.target) && !trigger.contains(event.target)) openLanguages(false);
+document.addEventListener('pointerdown', (event) => {
+  if (!options.hidden && !options.contains(event.target) && !trigger.contains(event.target))
+    openLanguages(false);
 });
-document.addEventListener('keydown', event => {
+document.addEventListener('keydown', (event) => {
   if (options.hidden) return;
   if (event.key === 'Escape') {
     event.preventDefault();
@@ -89,8 +103,12 @@ document.addEventListener('keydown', event => {
   const index = buttons.indexOf(document.activeElement);
   if (index < 0 || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
   event.preventDefault();
-  const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
-    (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+  const next =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? buttons.length - 1
+        : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
   buttons[next].focus();
 });
 for (const [value, name] of Object.entries(themeNames)) {
@@ -134,7 +152,7 @@ for (const [key, choices] of Object.entries(playerSettings)) {
 try {
   const stored = await chrome.storage.local.get([themeKey, languageKey, ...playbackKeys]);
   savedTheme = validTheme(stored[themeKey]);
-  language = languages.some(item => item.code === stored[languageKey]) ? stored[languageKey] : 'auto';
+  language = languages.some((item) => item.code === stored[languageKey]) ? stored[languageKey] : 'auto';
   for (const key of playbackKeys) {
     const field = document.getElementById(key);
     savedPlayback[key] = field.value = playerSetting(key, stored[key]);

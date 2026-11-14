@@ -27,7 +27,8 @@ export function findReel() {
   let best;
   let overlap = 0;
   for (const video of document.querySelectorAll('video')) {
-    const wrapper = video.closest('[aria-label="Video player"], [data-video-player]') ?? video.parentElement;
+    const wrapper =
+      video.closest('[aria-label="Video player"], [data-video-player]') ?? video.parentElement;
     // Fullscreen styling changes the video bounds. The wrapper stays in the reel feed.
     const bounds = wrapper.getBoundingClientRect();
     const visibleWidth = Math.min(innerWidth, bounds.right) - Math.max(bounds.left, 0);
@@ -47,29 +48,37 @@ export function findReel() {
     if (card.parentElement.querySelectorAll('video').length > 1) break;
     card = card.parentElement;
   }
-  return { ...best, card, key: location.pathname.replace(/\/$/, '') };
+  const key = location.pathname.replace(/\/$/, '');
+  const source = best.video.getAttribute('src') || best.video.currentSrc;
+  return { ...best, card, key, source };
 }
 
 function findButton(scope, action) {
-  return Array.from(scope.querySelectorAll(controls))
-    .find(element => labels[action].test(name(element)) && element.getClientRects().length);
+  return Array.from(scope.querySelectorAll(controls)).find(
+    (element) => labels[action].test(name(element)) && element.getClientRects().length,
+  );
 }
 
 function findFollowControl(scope) {
-  const selector = `${controls}, a[href], [role="link"]`;
+  const selector = `${controls}, a[href="#"], a[aria-pressed], [role="link"]:not([href])`;
   const candidates = scope.matches(selector) ? [scope] : scope.querySelectorAll(selector);
-  return Array.from(candidates).find(element => {
+  return Array.from(candidates).find((element) => {
     const label = name(element);
     const text = element.textContent.trim();
     const action = /^(follow|following|unfollow|följ|följer|sluta följa)$/i;
-    const matches = element.matches(controls) ? labels.follow.test(label) : action.test(text) || action.test(label);
+    const matches = element.matches(controls)
+      ? labels.follow.test(label)
+      : action.test(text) || action.test(label);
     return matches && element.getClientRects().length;
   });
 }
 
 export function reelControl(reel, action) {
   const navigation = action === 'previous' || action === 'next';
-  return findButton(navigation ? reel.card.closest('[role="main"],main') ?? document : reel.card, action);
+  return findButton(
+    navigation ? (reel.card.closest('[role="main"],main') ?? document) : reel.card,
+    action,
+  );
 }
 
 export function isEnabled(button) {
@@ -77,8 +86,10 @@ export function isEnabled(button) {
 }
 
 export function reelMuteControl(reel) {
-  const mute = /^(mute(?: (?:audio|video|sound))?|turn (?:off sound|sound off)|stäng av ljudet|inaktivera)$/i;
-  const unmute = /^(unmute(?: (?:audio|video|sound))?|turn (?:on sound|sound on)|slå på ljudet|aktivera)$/i;
+  const mute =
+    /^(mute(?: (?:audio|video|sound))?|turn (?:off sound|sound off)|stäng av ljudet|inaktivera)$/i;
+  const unmute =
+    /^(unmute(?: (?:audio|video|sound))?|turn (?:on sound|sound on)|slå på ljudet|aktivera)$/i;
   for (const button of reel.wrapper.querySelectorAll(controls)) {
     if (!isEnabled(button) || !button.getClientRects().length) continue;
     const label = name(button);
@@ -89,23 +100,29 @@ export function reelMuteControl(reel) {
 }
 
 export function reelVolumeControl(reel) {
-  return Array.from(reel.wrapper.querySelectorAll('[role="slider"],input[type="range"]'))
-    .find(element => /^(change volume|adjust volume|volume|ändra volymen|volym)$/i.test(name(element)));
+  return Array.from(reel.wrapper.querySelectorAll('[role="slider"],input[type="range"]')).find(
+    (element) => /^(change volume|adjust volume|volume|ändra volymen|volym)$/i.test(name(element)),
+  );
 }
 
 export function setReelVolume(reel, volume) {
   const slider = reelVolumeControl(reel);
   if (!slider || slider.matches(':disabled,[aria-disabled="true"]')) return;
   if (slider instanceof HTMLInputElement) {
-    slider.value = Number(slider.min || 0) + volume * (Number(slider.max || 100) - Number(slider.min || 0));
+    slider.value =
+      Number(slider.min || 0) + volume * (Number(slider.max || 100) - Number(slider.min || 0));
     for (const type of ['input', 'change']) slider.dispatchEvent(new Event(type, { bubbles: true }));
     return;
   }
   const bounds = slider.getBoundingClientRect();
   if (!bounds.width || !bounds.height) return;
   const options = {
-    bubbles: true, cancelable: true, view: window, button: 0,
-    clientX: bounds.left + bounds.width * volume, clientY: bounds.top + bounds.height / 2,
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    button: 0,
+    clientX: bounds.left + bounds.width * volume,
+    clientY: bounds.top + bounds.height / 2,
   };
   slider.dispatchEvent(new MouseEvent('mousedown', { ...options, buttons: 1 }));
   slider.dispatchEvent(new MouseEvent('mouseup', options));
@@ -146,22 +163,25 @@ function readCaption(caption) {
     link.start = Math.max(0, link.start - left);
     link.end = Math.min(trimmed.length, link.end - left);
   }
-  return { text: trimmed, links: links.filter(link => link.start < link.end) };
+  return { text: trimmed, links: links.filter((link) => link.start < link.end) };
 }
 
 export function reelMetadata(reel) {
-  const links = Array.from(reel.card.querySelectorAll('a[aria-label]'))
-    .filter(element => labels.owner.test(name(element)));
-  const owner = links.find(element => element.textContent.trim());
+  const links = Array.from(reel.card.querySelectorAll('a[aria-label]')).filter((element) =>
+    labels.owner.test(name(element)),
+  );
+  const owner = links.find((element) => element.textContent.trim());
   const heading = owner?.closest('h1,h2,h3,h4,[role="heading"]');
-  const photo = links.map(link => link.querySelector('img, svg image')).find(Boolean);
+  const photo = links.map((link) => link.querySelector('img, svg image')).find(Boolean);
   let follow;
   let caption = { text: '', links: [] };
   let more;
   for (let element = heading; element && element !== reel.card; element = element.parentElement) {
     follow ??= findFollowControl(element);
     const next = element.nextElementSibling;
-    if (!next || next.matches(captionExcluded) || findFollowControl(next)) continue;
+    if (!next || next.matches(captionExcluded)) continue;
+    const siblingFollow = findFollowControl(next);
+    if (siblingFollow && next.textContent.trim() === siblingFollow.textContent.trim()) continue;
     caption = readCaption(next);
     if (!caption.text) continue;
     more = findButton(next, 'expand');
@@ -171,7 +191,15 @@ export function reelMetadata(reel) {
   return {
     owner: owner?.textContent.trim() ?? '',
     profile: profile?.startsWith(`${location.origin}/`) ? profile : undefined,
-    photo: photo?.currentSrc || photo?.getAttribute('src') || photo?.getAttribute('href') || photo?.getAttribute('xlink:href'),
+    photo:
+      photo &&
+      webLink(
+        photo.currentSrc ||
+          photo.getAttribute('src') ||
+          photo.getAttribute('href') ||
+          photo.getAttribute('xlink:href'),
+        document.baseURI,
+      ),
     follow: follow?.textContent.trim() || (follow && name(follow)),
     followControl: follow,
     caption,
