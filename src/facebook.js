@@ -5,7 +5,7 @@ const captionExcluded = `${controls}, style, script, template, noscript, svg, [h
 const labels = {
   previous: /^(previous (reel|card|video)|föregående (reel|kort|video))$/i,
   next: /^(next (reel|card|video)|nästa (reel|kort|video))$/i,
-  like: /^(like|unlike|gilla|sluta gilla)(?:\b|$)/i,
+  like: /^(?:(?<liked>unlike|remove like|sluta gilla|ta bort gilla)|like|gilla)(?:\b|$)/i,
   comments: /^(comment|comments|kommentera|kommentarer)(?:\b|$)/i,
   share: /^(share|dela)(?:\b|$)/i,
   more: /^(more options|fler alternativ)(?:\b|$)/i,
@@ -20,6 +20,20 @@ function name(element) {
 
 export function reelRoute(url) {
   return /^\/reels?(?:\/\d+)?\/?$/.test(url.pathname);
+}
+
+export function reelHeaderBottom() {
+  // Facebook's banner can have zero height while its account navigation is fixed.
+  const header = 'header, [role="banner"]';
+  const navigation = `:is(${header}) :is(nav, [role="navigation"])`;
+  let bottom = 0;
+  for (const element of document.querySelectorAll(`${header}, ${navigation}`)) {
+    const bounds = element.getBoundingClientRect();
+    if (bounds.width && bounds.height && bounds.top <= 0) {
+      bottom = Math.max(bottom, bounds.bottom);
+    }
+  }
+  return bottom;
 }
 
 export function findReel() {
@@ -83,6 +97,13 @@ export function reelControl(reel, action) {
 
 export function isEnabled(button) {
   return Boolean(button && !button.matches(':disabled,[aria-disabled="true"]'));
+}
+
+export function reelLiked(button) {
+  return Boolean(
+    button &&
+      (button.getAttribute('aria-pressed') === 'true' || labels.like.exec(name(button))?.groups.liked),
+  );
 }
 
 export function reelMuteControl(reel) {

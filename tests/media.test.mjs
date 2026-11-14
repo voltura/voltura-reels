@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { panBounds, seekTarget, timeText } from '../src/media.js';
-import { reelRoute } from '../src/facebook.js';
+import { nativeAction, reelControl, reelLiked, reelRoute } from '../src/facebook.js';
 import { languages, resolveLanguage, translator } from '../extension/languages.js';
 
 test('relative seeking crosses gaps in the requested direction', () => {
@@ -27,6 +27,28 @@ test('a reel path is required before attaching the player', () => {
   assert.ok(reelRoute(new URL('https://www.facebook.com/reel/?s=tab')));
   assert.ok(reelRoute(new URL('https://www.facebook.com/reel/1691796978562429/')));
   assert.ok(!reelRoute(new URL('https://www.facebook.com/watch/?v=100')));
+});
+
+test('the native Swedish Like button remains available as its label changes', () => {
+  const reactionCount = '70,3\u00a0tn reaktioner';
+  let label = `Ta bort Gilla, ${reactionCount}`;
+  const like = {
+    getAttribute: (attribute) => (attribute === 'aria-label' ? label : null),
+    getClientRects: () => [{}],
+    matches: () => false,
+    click: () => {
+      label = `${reelLiked(like) ? 'Gilla' : 'Ta bort Gilla'}, ${reactionCount}`;
+    },
+  };
+  const reactionMenu = { ...like, getAttribute: () => 'Ändra reaktionen Gilla' };
+  const reel = { card: { querySelectorAll: () => [reactionMenu, like] } };
+
+  assert.equal(reelControl(reel, 'like'), like);
+  assert.equal(reelLiked(like), true);
+  assert.equal(nativeAction(reel, 'like'), true);
+  assert.equal(reelLiked(like), false);
+  assert.equal(nativeAction(reel, 'like'), true);
+  assert.equal(reelLiked(like), true);
 });
 
 test('language resolution retains regional and script distinctions', () => {
