@@ -35,6 +35,8 @@ svg {
   vertical-align: middle;
 }
 .stage {
+  --control-background-opacity: 78%;
+  --highlight-background-opacity: 86%;
   position: fixed;
   inset: 0;
   z-index: 2147483646;
@@ -111,12 +113,20 @@ svg {
   height: 34px;
   border-radius: 8px;
   border: 1px solid var(--theme-border);
-  background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--theme-surface) var(--control-background-opacity, 88%),
+    transparent
+  );
   color: var(--theme-on-surface);
 }
 .overlay-button:hover,
 .overlay-button[aria-pressed='true'] {
-  background: var(--theme-raised);
+  background: color-mix(
+    in srgb,
+    var(--theme-raised) var(--highlight-background-opacity, 100%),
+    transparent
+  );
 }
 .overlay-button svg {
   width: 16px;
@@ -149,12 +159,12 @@ svg {
   height: 46px;
   padding: 0 3px;
   border-radius: 50%;
-  background: var(--theme-surface);
+  background: color-mix(in srgb, var(--theme-surface) var(--control-background-opacity), transparent);
   color: var(--theme-on-surface);
 }
 .social button:hover,
 .social button[aria-pressed='true'] {
-  background: var(--theme-active);
+  background: color-mix(in srgb, var(--theme-active) var(--highlight-background-opacity), transparent);
   color: var(--theme-accent);
 }
 .social .count {
@@ -172,15 +182,17 @@ svg {
   right: calc(100% + 7px);
   transform: translateY(50%);
 }
-.social button[aria-pressed='true'] svg {
-  fill: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+#like[aria-pressed='true'] svg {
+  fill: currentColor;
 }
 .creator {
   position: absolute;
   bottom: 85px;
-  left: max(16px, calc((100% - 900px) / 2));
+  inset-inline: 0;
   z-index: 3;
-  max-width: min(calc(100% - 88px), 740px);
+  width: fit-content;
+  max-width: min(calc(100% - 136px), 740px);
+  margin-inline: auto;
   padding: 9px 12px;
   border-radius: 8px;
   background: #080b12df;
@@ -272,7 +284,7 @@ svg {
   padding: 6px 9px 7px;
   border: 1px solid var(--theme-border);
   border-radius: 10px;
-  background: var(--theme-surface);
+  background: color-mix(in srgb, var(--theme-surface) var(--control-background-opacity), transparent);
   box-shadow: 0 5px 18px #0005;
   transition:
     opacity 0.24s,

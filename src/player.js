@@ -18,6 +18,8 @@ import {
   isEnabled,
   nativeAction,
   reelControl,
+  reelHeaderBottom,
+  reelLiked,
   reelMetadata,
   reelMuteControl,
   setReelVolume,
@@ -117,7 +119,7 @@ export class ReelPlayer {
     this.translate = translator(this.host.lang);
     for (const element of this.ui.querySelectorAll('[aria-label]')) {
       const message = element.dataset.message ?? element.getAttribute('aria-label');
-      if (element.matches('button')) this.label(element, message);
+      if (element.matches('button')) this.label(element, message, element.dataset.tooltipMessage);
       else {
         element.dataset.message = message;
         element.setAttribute('aria-label', this.translate(message));
@@ -174,7 +176,7 @@ export class ReelPlayer {
     const rail = navigation?.getBoundingClientRect();
     const size = (rail && Math.min(rail.width, rail.height)) || 44;
     const right = Math.max(margin, innerWidth - margin - size);
-    const top = Math.max(margin, reel.bounds.top + 8);
+    const top = Math.max(margin, reel.bounds.top + 8, reelHeaderBottom() + 8);
     const railLeft = rail && clamp(rail.left + (rail.width - size) / 2, margin, right);
     const fitsBesideVideo = right >= reel.bounds.right + 8;
     let left = right;
@@ -189,7 +191,7 @@ export class ReelPlayer {
         y = rail.top - size - margin;
       } else {
         left = reel.bounds.right - size - 16;
-        y = reel.bounds.top + 116;
+        y = Math.max(top, reel.bounds.top + 116);
       }
     }
 
@@ -902,23 +904,23 @@ export class ReelPlayer {
           if (number.textContent !== count) number.textContent = count;
         } else number?.remove();
       }
-      if (action === 'like')
-        this.get(action).setAttribute(
-          'aria-pressed',
-          String(
-            native?.getAttribute('aria-pressed') === 'true' ||
-              /^(unlike|sluta gilla)/i.test(native?.getAttribute('aria-label') ?? ''),
-          ),
-        );
+      if (action === 'like') {
+        const liked = reelLiked(native);
+        button.setAttribute('aria-pressed', String(liked));
+        this.label(button, 'Like reel', liked ? 'Unlike reel' : 'Like reel');
+      }
     }
   }
 
-  label(element, key) {
+  label(element, key, tooltipKey = key) {
     element.dataset.message = key;
+    if (tooltipKey !== key) element.dataset.tooltipMessage = tooltipKey;
+    else delete element.dataset.tooltipMessage;
     const translated = this.translate?.(key) ?? key;
     if (element.getAttribute('aria-label') !== translated)
       element.setAttribute('aria-label', translated);
-    element.dataset.tip = translated;
+    const tooltipText = tooltipKey === key ? translated : (this.translate?.(tooltipKey) ?? tooltipKey);
+    element.dataset.tip = tooltipText;
     let tooltip = element.querySelector('.tooltip');
     if (!tooltip) {
       tooltip = document.createElement('span');
@@ -936,7 +938,7 @@ export class ReelPlayer {
       element.append(tooltip);
     }
     const title = tooltip.firstElementChild;
-    if (title.textContent !== translated) title.textContent = translated;
+    if (title.textContent !== tooltipText) title.textContent = tooltipText;
   }
 
   setMenu(id, trigger, open) {
