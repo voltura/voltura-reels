@@ -36,5 +36,6 @@ const icons = {
 export function paintIcon(element, name) {
   if (element.dataset.icon === name && element.firstElementChild) return;
   element.dataset.icon = name;
-  element.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`;
+  element.querySelector('svg')?.remove();
+  element.insertAdjacentHTML('afterbegin', `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`);
 }

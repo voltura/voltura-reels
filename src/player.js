@@ -83,8 +83,10 @@ export class ReelPlayer {
       this.stopHold();
       this.reel = reel;
       this.requestedTime = undefined;
+      this.showTenths = false;
       if (!sameReel || !this.commentsState) this.loop = undefined;
       this.gesture = undefined;
+      this.rangeDrag = undefined;
       this.pan = undefined;
       this.viewport.classList.remove('panning');
       this.zoom = 1;
@@ -96,7 +98,7 @@ export class ReelPlayer {
     }
     this.launch.hidden = this.active;
     this.launch.style.left = `${clamp(reel.bounds.right - 50, 8, Math.max(8, innerWidth - 46))}px`;
-    this.launch.style.top = `${clamp(reel.bounds.top + 10, 8, Math.max(8, innerHeight - 46))}px`;
+    this.launch.style.top = `${clamp(reel.bounds.top + 62, 8, Math.max(8, innerHeight - 46))}px`;
     if (this.active) {
       this.render();
       this.applyZoom();
@@ -115,6 +117,8 @@ export class ReelPlayer {
       video.addEventListener(event, () => {
         if (event === 'loadedmetadata' && this.active) this.applyMediaPreferences();
         if (!this.active) return;
+        if (event === 'play' || event === 'pause' || event === 'volumechange') this.applyAudioPreference();
+        if (event === 'play') this.showTenths = false;
         this.render();
         if (event === 'play' || event === 'pause') this.reveal();
         if (event === 'loadedmetadata') this.applyZoom();
@@ -122,11 +126,15 @@ export class ReelPlayer {
     }
     video.addEventListener('seeked', () => {
       if (!video.seeking) this.requestedTime = undefined;
-      if (this.active) this.render();
+      if (this.active) {
+        this.enforceLoop();
+        this.render();
+      }
     }, { signal });
+    video.addEventListener('timeupdate', () => this.enforceLoop(), { signal });
     video.addEventListener('ended', () => {
       if (this.active && this.loop?.enabled) {
-        this.seek(this.loop.start, 'loop');
+        this.seek(this.loop.start);
         void video.play().catch(() => {});
       } else if (this.active) {
         this.render();
@@ -141,7 +149,11 @@ export class ReelPlayer {
     const video = this.video;
     if (this.rate !== undefined) video.playbackRate = this.rate;
     if (this.volume !== undefined) video.volume = this.volume;
-    if (this.muted !== undefined) video.muted = this.muted;
+    this.applyAudioPreference();
+  }
+
+  applyAudioPreference() {
+    if (this.muted !== undefined && this.video.muted !== this.muted) this.video.muted = this.muted;
   }
 
   pinVideo() {
@@ -174,7 +186,7 @@ export class ReelPlayer {
       this.zoom = saved.zoom;
       this.panX = saved.x;
       this.panY = saved.y;
-      this.seek(saved.time, 'restore');
+      this.seek(saved.time);
       if (saved.paused) this.video.pause();
       else void this.video.play().catch(() => {});
     } else {
@@ -204,7 +216,8 @@ export class ReelPlayer {
     clearTimeout(this.revealTimer);
     clearTimeout(this.noticeTimer);
     cancelAnimationFrame(this.frame);
-    this.gesture = this.pan = undefined;
+    this.gesture = this.rangeDrag = this.pan = undefined;
+    this.scrubbing = false;
     this.viewport.classList.remove('panning');
     this.stage.hidden = true;
     this.ui.querySelector('.osd').hidden = true;
@@ -239,49 +252,66 @@ export class ReelPlayer {
     this.revealTimer = setTimeout(() => {
       const menuOpen = !this.get('rates').hidden || !this.get('volume-popover').hidden;
       const keyboardFocus = this.ui.activeElement !== this.viewport && this.ui.activeElement?.matches(':focus-visible');
-      if (this.gesture || this.pan || this.hold || menuOpen || keyboardFocus) return;
+      if (this.gesture || this.rangeDrag || this.pan || this.hold || menuOpen || keyboardFocus) return;
       this.layout.classList.add('overlay-toggle-faded');
-      if (!this.video.paused && !this.video.ended) this.dock.classList.add('faded');
+      if (!this.dock.matches(':hover') && !this.video.paused && !this.video.ended) this.dock.classList.add('faded');
     }, 1550);
   }
 
   tick() {
     if (!this.active) return;
-    const video = this.video;
-    if (video && !video.paused && !video.seeking) {
-      if (this.loop?.enabled && !this.gesture && (video.currentTime >= this.loop.end || video.currentTime < this.loop.start - 0.04)) {
-        this.seek(this.loop.start, 'loop');
-      }
+    this.enforceLoop();
+    if (this.video && !this.video.paused && !this.video.seeking) {
       this.renderTime();
     }
     this.frame = requestAnimationFrame(() => this.tick());
   }
 
-  seek(time, source = 'relative', direction = 0) {
+  enforceLoop() {
+    const video = this.video;
+    const loop = this.loop;
+    if (!this.active || !video || video.paused || video.seeking || !loop?.enabled ||
+        this.gesture || this.rangeDrag || this.scrubbing) return;
+    if (video.currentTime >= loop.end) this.seek(loop.start);
+  }
+
+  seek(time, direction = 0) {
     if (!this.video || !this.duration) return;
     const target = seekTarget(this.video.seekable, clamp(time, 0, Math.max(0, this.duration - 0.001)), direction);
     if (target === null) return;
-    if (source !== 'loop' && this.loop?.enabled && (target < this.loop.start || target > this.loop.end)) {
-      this.loop.enabled = false;
-      this.renderLoop();
-    }
+    // Scrubbing does not change whether repeat is enabled. Playback resumes
+    // inside the selected range when the user finishes moving the playhead.
     this.requestedTime = target;
     this.video.currentTime = target;
     this.renderTime();
   }
 
-  step(amount) { this.seek(this.position + amount, 'relative', Math.sign(amount)); }
+  resumeInsideLoop() {
+    if (this.loop?.enabled && (this.position < this.loop.start || this.position >= this.loop.end)) {
+      this.seek(this.loop.start);
+    }
+  }
+
+  step(amount) {
+    this.showTenths = this.video.paused && Math.abs(amount) < 5;
+    const target = this.position + amount;
+    if (this.loop?.enabled && (target < this.loop.start || target >= this.loop.end)) {
+      this.seek(amount > 0 ? this.loop.start : Math.max(this.loop.start, this.loop.end - 0.1));
+    } else this.seek(target, Math.sign(amount));
+  }
 
   togglePlay() {
+    this.applyAudioPreference();
     if (!this.video.paused) {
       this.video.pause();
       return;
     }
-    if (this.loop?.enabled && (this.position < this.loop.start || this.position >= this.loop.end)) this.seek(this.loop.start, 'loop');
+    this.resumeInsideLoop();
     void this.video.play().catch(() => this.announce('Playback unavailable'));
   }
 
   startHold(name, amount) {
+    if (this.get('forward').disabled) return;
     this.stopHold();
     this.step(amount);
     const started = performance.now();
@@ -304,15 +334,13 @@ export class ReelPlayer {
   selectLoop() {
     if (!this.duration || !this.video.seekable.length) return;
     if (!this.loop) {
-      const length = Math.min(4, this.duration);
+      const length = Math.min(this.duration, Math.max(4, this.duration * 0.08));
       const start = clamp(tenth(this.position), 0, this.duration - length);
       this.loop = { start, end: start + length, enabled: true };
     } else {
       this.loop.enabled = !this.loop.enabled;
     }
-    if (this.loop.enabled && !this.video.paused && (this.position < this.loop.start || this.position >= this.loop.end)) {
-      this.seek(this.loop.start, 'loop');
-    }
+    if (!this.video.paused) this.resumeInsideLoop();
     this.renderLoop();
   }
 
@@ -320,8 +348,19 @@ export class ReelPlayer {
     if (!this.loop) return;
     const min = edge === 'start' ? 0 : Math.min(this.duration, this.loop.start + 0.2);
     const max = edge === 'end' ? this.duration : Math.max(0, this.loop.end - 0.2);
-    this.loop[edge] = clamp(tenth(time), min, max);
+    const position = clamp(tenth(time), min, max);
+    if (position === this.loop[edge]) return;
+    this.loop[edge] = position;
+    this.loop.enabled = true;
     this.renderLoop();
+  }
+
+  clearLoop() {
+    const focusWasHidden = this.ui.activeElement === this.get('clear') ||
+      this.ui.activeElement?.classList.contains('handle');
+    this.loop = undefined;
+    this.renderLoop();
+    if (focusWasHidden) this.get('repeat').focus();
   }
 
   clearNavigation() {
@@ -415,7 +454,7 @@ export class ReelPlayer {
     const reset = this.get('zoom-reset');
     if (this.zoom === 1 && this.ui.activeElement === reset) this.viewport.focus();
     reset.hidden = this.zoom === 1;
-    reset.textContent = `${this.zoom.toFixed(1)}×`;
+    reset.querySelector('.control-value').textContent = `${this.zoom.toFixed(1)}×`;
     this.label(reset, 'Reset zoom');
   }
 
@@ -444,7 +483,7 @@ export class ReelPlayer {
     const percent = `${this.duration ? clamp(position / this.duration, 0, 1) * 100 : 0}%`;
     this.ui.querySelector('.played').style.width = percent;
     this.ui.querySelector('.indicator').style.left = percent;
-    const elapsed = timeText(position);
+    const elapsed = timeText(position, this.video.paused && this.showTenths);
     const duration = this.duration ? ` / ${timeText(this.duration, false)}` : '';
     if (this.get('elapsed').textContent !== elapsed) this.get('elapsed').textContent = elapsed;
     if (this.get('duration').textContent !== duration) this.get('duration').textContent = duration;
@@ -502,7 +541,8 @@ export class ReelPlayer {
     this.get('volume-value').textContent = `${Math.round(video.volume * 100)}%`;
     const rate = this.get('rate');
     const formattedRate = formatPlaybackRate(video.playbackRate);
-    if (rate.textContent !== formattedRate) rate.textContent = formattedRate;
+    const rateValue = rate.querySelector('.control-value');
+    if (rateValue.textContent !== formattedRate) rateValue.textContent = formattedRate;
     for (const button of this.get('rates').children) {
       button.setAttribute('aria-pressed', String(Number(button.dataset.rate) === video.playbackRate));
     }
@@ -553,6 +593,23 @@ export class ReelPlayer {
     const translated = this.translate?.(key) ?? key;
     if (element.getAttribute('aria-label') !== translated) element.setAttribute('aria-label', translated);
     element.dataset.tip = translated;
+    let tooltip = element.querySelector('.tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('span');
+      tooltip.className = 'tooltip';
+      tooltip.setAttribute('aria-hidden', 'true');
+      const title = document.createElement('span');
+      title.className = 'tooltip-text';
+      tooltip.append(title);
+      for (const keycap of element.dataset.keys?.split('|') ?? []) {
+        const key = document.createElement('kbd');
+        key.textContent = keycap;
+        tooltip.append(key);
+      }
+      element.append(tooltip);
+    }
+    const title = tooltip.firstElementChild;
+    if (title.textContent !== translated) title.textContent = translated;
   }
 
   setMenu(id, trigger, open) {
@@ -594,11 +651,7 @@ export class ReelPlayer {
     click('play', () => this.togglePlay());
     click('frame', () => void this.capture());
     click('repeat', () => this.selectLoop());
-    click('clear', () => {
-      this.loop = undefined;
-      this.get('repeat').focus();
-      this.renderLoop();
-    });
+    click('clear', () => this.clearLoop());
     click('overlay', () => {
       this.hiddenOverlay = !this.hiddenOverlay;
       this.renderOverlay();
@@ -613,7 +666,8 @@ export class ReelPlayer {
     click('cc', () => this.setCaptions());
     click('mute', () => {
       this.muted = !this.video.muted;
-      this.video.muted = this.muted;
+      if (!this.muted && !this.video.volume) this.video.volume = this.volume = 0.5;
+      this.applyAudioPreference();
     });
     click('rate', () => this.toggleMenu('rates', 'rate'));
     click('volume-button', () => this.toggleMenu('volume-popover', 'volume-button'));
@@ -645,6 +699,7 @@ export class ReelPlayer {
       if (!event.target.closest('.popover-wrap')) this.closePopovers();
     });
     this.on(this.stage, 'pointermove', () => this.reveal());
+    this.on(this.dock, 'pointerleave', () => this.reveal());
     this.on(this.stage, 'focusin', () => this.reveal());
     this.on(this.stage, 'focusout', () => queueMicrotask(() => this.reveal()));
     this.on(document, 'fullscreenchange', () => {
@@ -655,7 +710,11 @@ export class ReelPlayer {
     });
     this.on(window, 'blur', () => {
       this.stopHold();
-      this.gesture = this.pan = undefined;
+      if (this.rangeDrag) {
+        this.loop = this.rangeDrag.original;
+        this.renderLoop();
+      }
+      this.gesture = this.rangeDrag = this.pan = undefined;
       this.viewport.classList.remove('panning');
       this.reveal();
     });
@@ -687,38 +746,81 @@ export class ReelPlayer {
       const rect = this.scrubber.getBoundingClientRect();
       return clamp((event.clientX - rect.left) / rect.width, 0, 1) * this.duration;
     };
-    this.on(this.timeline, 'input', event => this.seek(Number(event.target.value), 'timeline'));
+    this.on(this.timeline, 'input', event => {
+      this.showTenths = false;
+      this.seek(Number(event.target.value));
+      if (!this.video.paused && !this.scrubbing) this.resumeInsideLoop();
+    });
+    this.on(this.timeline, 'pointerdown', () => { this.scrubbing = true; });
+    this.on(window, 'pointerup', () => this.finishScrubbing(), { capture: true });
+    this.on(window, 'pointercancel', () => this.finishScrubbing(), { capture: true });
+    this.on(this.scrubber, 'pointerdown', event => {
+      if (!event.shiftKey || event.button !== 0 || this.timeline.disabled || event.target.closest('.handle')) return;
+      event.preventDefault();
+      this.rangeDrag = { pointer: event.pointerId, anchor: pointerTime(event), original: this.loop };
+      this.scrubber.setPointerCapture(event.pointerId);
+    }, { capture: true });
     this.on(this.scrubber, 'pointermove', event => {
       if (!this.duration) return;
       const time = pointerTime(event);
-      if (this.gesture) this.moveHandle(this.gesture, time);
+      if (this.gesture?.pointer === event.pointerId) {
+        if (event.buttons) this.moveHandle(this.gesture.edge, time);
+        else this.finishHandleDrag(event.pointerId);
+      }
+      if (this.rangeDrag?.pointer === event.pointerId) {
+        const start = Math.min(this.rangeDrag.anchor, time);
+        const end = Math.max(this.rangeDrag.anchor, time);
+        if (end - start >= 0.2) {
+          this.loop = { start: tenth(start), end: Math.min(this.duration, tenth(end)), enabled: true };
+          this.renderLoop();
+        }
+      }
       const hover = this.ui.querySelector('.hover-time');
       hover.hidden = false;
       hover.style.left = `${time / this.duration * 100}%`;
       hover.textContent = timeText(time);
     });
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+      this.on(this.scrubber, type, event => {
+        if (this.rangeDrag?.pointer !== event.pointerId) return;
+        const { original } = this.rangeDrag;
+        this.rangeDrag = undefined;
+        if (type !== 'pointerup') this.loop = original;
+        else if (this.loop && this.loop !== original) {
+          this.showTenths = false;
+          this.seek(this.loop.start);
+        }
+        this.renderLoop();
+        this.reveal();
+      });
+    }
     this.on(this.scrubber, 'pointerleave', () => { this.ui.querySelector('.hover-time').hidden = true; });
     for (const edge of ['start', 'end']) {
       const handle = this.get(`loop-${edge}`);
       this.on(handle, 'pointerdown', event => {
         if (event.button !== 0) return;
-        this.gesture = edge;
+        event.preventDefault();
+        this.gesture = { edge, pointer: event.pointerId };
         handle.setPointerCapture(event.pointerId);
       });
       for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-        this.on(handle, event, () => { this.gesture = undefined; this.reveal(); });
+        this.on(handle, event, pointer => this.finishHandleDrag(pointer.pointerId));
       }
       this.on(handle, 'keydown', event => {
         if (!this.loop) return;
+        const step = event.shiftKey ? 1 : 0.1;
         const adjustments = {
-          ArrowLeft: this.loop[edge] - 0.1, ArrowRight: this.loop[edge] + 0.1,
+          ArrowLeft: this.loop[edge] - step, ArrowRight: this.loop[edge] + step,
           Home: 0, End: this.duration,
         };
         if (!Object.hasOwn(adjustments, event.key)) return;
         this.moveHandle(edge, adjustments[event.key]);
+        if (!this.video.paused) this.resumeInsideLoop();
         event.preventDefault();
       });
     }
+    this.on(window, 'pointerup', event => this.finishHandleDrag(event.pointerId), { capture: true });
+    this.on(window, 'pointercancel', event => this.finishHandleDrag(event.pointerId), { capture: true });
     this.on(this.viewport, 'wheel', event => {
       if (event.ctrlKey || !event.deltaY) return;
       event.preventDefault();
@@ -750,11 +852,27 @@ export class ReelPlayer {
     }
   }
 
+  finishScrubbing() {
+    if (!this.scrubbing) return;
+    this.scrubbing = false;
+    if (this.active && !this.video.paused) this.resumeInsideLoop();
+  }
+
+  finishHandleDrag(pointerId) {
+    if (this.gesture?.pointer !== pointerId) return;
+    this.gesture = undefined;
+    if (this.active && !this.video.paused) this.resumeInsideLoop();
+    this.reveal();
+  }
+
   connectKeys() {
     const actions = {
       k: () => this.togglePlay(),
       m: () => this.get('mute').click(),
       h: () => this.get('overlay').click(),
+      s: () => this.get('frame').click(),
+      r: () => this.get('rate').click(),
+      v: () => this.get('volume-button').click(),
       c: () => this.setCaptions(),
       f: () => void this.leave(),
       l: () => this.selectLoop(),
@@ -768,9 +886,20 @@ export class ReelPlayer {
       '0': () => this.zoomAt(1),
     };
     this.on(document, 'keydown', event => {
-      if (!this.active || event.ctrlKey || event.metaKey) return;
+      if (event.ctrlKey || event.metaKey || event.isComposing) return;
+      const editable = event.composedPath().some(node => node instanceof Element &&
+        node.matches('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]'));
       const focus = this.ui.activeElement;
       const key = event.key.toLowerCase();
+      if (!this.active) {
+        if (key === 'f' && !editable && !event.altKey && !event.shiftKey && !event.repeat &&
+            !this.launch.hidden && !document.querySelector('[role="dialog"][aria-modal="true"]')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          this.enter();
+        }
+        return;
+      }
       if (key === 'escape') {
         if (!this.get('rates').hidden || !this.get('volume-popover').hidden) {
           const trigger = this.get('rates').hidden ? 'volume-button' : 'rate';
@@ -781,6 +910,8 @@ export class ReelPlayer {
         }
       } else if (focus?.matches('input,[role="slider"]')) {
         return;
+      } else if (key === 'l' && event.shiftKey && !event.altKey) {
+        if (!event.repeat) this.clearLoop();
       } else if (event.altKey && this.zoom > 1 && Object.hasOwn(panKeys, event.key)) {
         const [x, y] = panKeys[event.key];
         this.panX += x * 40;
