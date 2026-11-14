@@ -352,6 +352,7 @@ export class ReelPlayer {
     if (position === this.loop[edge]) return;
     this.loop[edge] = position;
     this.loop.enabled = true;
+    if (!this.video.paused) this.resumeInsideLoop();
     this.renderLoop();
   }
 
@@ -815,7 +816,6 @@ export class ReelPlayer {
         };
         if (!Object.hasOwn(adjustments, event.key)) return;
         this.moveHandle(edge, adjustments[event.key]);
-        if (!this.video.paused) this.resumeInsideLoop();
         event.preventDefault();
       });
     }
