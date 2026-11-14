@@ -1,3 +1,5 @@
+import { webLink } from './caption.js';
+
 const controls = '[role="button"], button';
 const captionExcluded = `${controls}, style, script, template, noscript, svg, [hidden], [aria-hidden="true"]`;
 const labels = {
@@ -97,8 +99,9 @@ export function setReelVolume(reel, volume) {
   slider.dispatchEvent(new MouseEvent('mouseup', options));
 }
 
-function captionText(caption) {
+function readCaption(caption) {
   let text = '';
+  const links = [];
   function lineBreak() {
     if (text && !text.endsWith('\n')) text += '\n';
   }
@@ -116,11 +119,22 @@ function captionText(caption) {
     }
     const block = /^(block|flow-root|flex|grid|list-item|table)$/.test(display);
     if (block) lineBreak();
+    const start = text.length;
     for (const child of node.childNodes) read(child);
+    if (node.matches('a[href]') && text.length > start) {
+      const href = webLink(node.href);
+      if (href) links.push({ start, end: text.length, href });
+    }
     if (block) lineBreak();
   }
   read(caption);
-  return text.replace(/[^\S\r\n]+/g, ' ').replace(/ *(\r?\n) */g, '$1').trim();
+  const trimmed = text.trim();
+  const left = text.length - text.trimStart().length;
+  for (const link of links) {
+    link.start = Math.max(0, link.start - left);
+    link.end = Math.min(trimmed.length, link.end - left);
+  }
+  return { text: trimmed, links: links.filter(link => link.start < link.end) };
 }
 
 export function reelMetadata(reel) {
@@ -130,14 +144,14 @@ export function reelMetadata(reel) {
   const heading = owner?.closest('h1,h2,h3,h4,[role="heading"]');
   const photo = links.map(link => link.querySelector('img, svg image')).find(Boolean);
   let follow;
-  let caption = '';
+  let caption = { text: '', links: [] };
   let more;
   for (let element = heading; element && element !== reel.card; element = element.parentElement) {
     follow ??= findButton(element, 'follow');
     const next = element.nextElementSibling;
     if (!next || next.matches(captionExcluded) || findButton(next, 'follow')) continue;
-    caption = captionText(next);
-    if (!caption) continue;
+    caption = readCaption(next);
+    if (!caption.text) continue;
     more = findButton(next, 'expand');
     break;
   }

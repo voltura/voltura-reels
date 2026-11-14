@@ -4,6 +4,7 @@ import themes from '../extension/themes.css';
 import { defaultTheme, formatPlaybackRate, playbackRates, playerSetting, playerSettings, themeKey, validTheme } from '../extension/preferences.js';
 import { languageKey, resolveLanguage, translator } from '../extension/languages.js';
 import { paintIcon } from './icons.js';
+import { renderCaption } from './caption.js';
 import { clamp, panBounds, seekTarget, tenth, timeText } from './media.js';
 import { isEnabled, nativeAction, reelControl, reelMetadata, reelMuteControl, setReelVolume } from './facebook.js';
 
@@ -327,9 +328,11 @@ export class ReelPlayer {
     if (!this.active) return;
     clearTimeout(this.revealTimer);
     this.dock.classList.remove('faded');
-    this.layout.classList.remove('overlay-toggle-faded');
-    if (this.controlsVisibility === 'always') return;
+    this.layout.classList.remove('overlay-toggle-faded', 'utilities-idle');
+    if (this.controlsVisibility === 'always' && !this.hiddenOverlay) return;
     this.revealTimer = setTimeout(() => {
+      if (this.hiddenOverlay) this.layout.classList.add('utilities-idle');
+      if (this.controlsVisibility === 'always') return;
       const menuOpen = !this.get('rates').hidden || !this.get('volume-popover').hidden;
       const keyboardFocus = this.ui.activeElement !== this.viewport && this.ui.activeElement?.matches(':focus-visible');
       if (this.gesture || this.rangeDrag || this.pan || this.hold || menuOpen || keyboardFocus) return;
@@ -685,13 +688,12 @@ export class ReelPlayer {
   renderOverlay() {
     const overlay = this.get('overlay');
     paintIcon(overlay, this.hiddenOverlay ? 'eyeoff' : 'eye');
-    this.label(overlay, this.hiddenOverlay ? 'Show reel information' : 'Hide reel information');
+    this.label(overlay, this.hiddenOverlay ? 'Restore overlays' : 'Hide overlays');
     overlay.setAttribute('aria-pressed', String(this.hiddenOverlay));
-    this.layout.classList.toggle('social-hidden', this.hiddenOverlay);
     this.get('social').hidden = this.hiddenOverlay;
     const { owner, profile, photo, follow, caption, more } = reelMetadata(this.reel);
     this.captionSource = more;
-    this.get('creator').hidden = this.hiddenOverlay || !(owner || caption);
+    this.get('creator').hidden = this.hiddenOverlay || !(owner || caption.text);
     this.get('owner').parentElement.hidden = !owner;
     if (this.get('creator-name').textContent !== owner) this.get('creator-name').textContent = owner;
     if (profile && this.get('owner').getAttribute('href') !== profile) this.get('owner').href = profile;
@@ -703,13 +705,17 @@ export class ReelPlayer {
     const followState = this.get('creator-follow');
     followState.hidden = !follow;
     if (followState.textContent !== (follow ?? '')) followState.textContent = follow ?? '';
-    if (this.get('caption').textContent !== caption) this.get('caption').textContent = caption;
+    const captionBox = this.get('caption');
+    const captionKey = JSON.stringify(caption);
+    if (this.captionKey !== captionKey) {
+      this.captionKey = captionKey;
+      renderCaption(captionBox, caption);
+    }
     const expanded = Boolean(this.captionExpanded);
     this.get('creator').classList.toggle('expanded', expanded);
     const disclosure = this.get('caption-more');
-    const captionBox = this.get('caption');
     const canExpand = Boolean(more) || captionBox.scrollHeight > captionBox.clientHeight;
-    disclosure.hidden = !caption || !(canExpand || expanded || this.captionWasExpanded);
+    disclosure.hidden = !caption.text || !(canExpand || expanded || this.captionWasExpanded);
     disclosure.setAttribute('aria-expanded', String(expanded));
     const disclosureText = this.translate(expanded ? 'See less' : 'See more');
     if (disclosure.textContent !== disclosureText) disclosure.textContent = disclosureText;
