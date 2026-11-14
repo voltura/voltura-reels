@@ -122,14 +122,43 @@ export class ReelPlayer {
       this.reel = reel;
     }
     this.launch.hidden = this.active;
-    this.launch.style.left = `${clamp(reel.bounds.right - 50, 8, Math.max(8, innerWidth - 46))}px`;
-    // Leave room for Facebook's search button and its tooltip.
-    this.launch.style.top = `${clamp(reel.bounds.top + 116, 8, Math.max(8, innerHeight - 46))}px`;
     if (this.active) {
       this.applyNativeRepeat();
       this.render();
       this.applyZoom();
+    } else {
+      this.positionLauncher(reel);
     }
+  }
+
+  positionLauncher(reel) {
+    const margin = 12;
+    const navigation = reelControl(reel, 'previous') ?? reelControl(reel, 'next');
+    const rail = navigation?.getBoundingClientRect();
+    const size = rail && Math.min(rail.width, rail.height) || 44;
+    const right = Math.max(margin, innerWidth - margin - size);
+    const top = Math.max(margin, reel.bounds.top + 8);
+    const railLeft = rail && clamp(rail.left + (rail.width - size) / 2, margin, right);
+    const fitsBesideVideo = right >= reel.bounds.right + 8;
+    let left = right;
+    let y = top;
+
+    if (rail && railLeft >= reel.bounds.right + 8 && rail.top >= top + size + 8) {
+      left = railLeft;
+    } else if (!fitsBesideVideo) {
+      // On tight layouts, use the space above the arrows when they overlap the reel.
+      if (rail && rail.top >= top + size + 24) {
+        left = railLeft;
+        y = rail.top - size - margin;
+      } else {
+        left = reel.bounds.right - size - 16;
+        y = reel.bounds.top + 116;
+      }
+    }
+
+    this.launch.style.setProperty('--launch-size', `${size}px`);
+    this.launch.style.left = `${clamp(left, margin, right)}px`;
+    this.launch.style.top = `${clamp(y, margin, Math.max(margin, innerHeight - margin - size))}px`;
   }
 
   waitForReel() {
