@@ -1,0 +1,43 @@
+html[data-voltura-reel-fullscreen] {
+  background: #070909 !important;
+}
+
+html[data-voltura-reel-fullscreen] body {
+  visibility: hidden !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-reel-path] {
+  contain: none !important;
+  content-visibility: visible !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  perspective: none !important;
+  will-change: auto !important;
+  isolation: auto !important;
+  z-index: auto !important;
+  opacity: 1 !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-reel-video] {
+  position: fixed !important;
+  inset: 0 !important;
+  box-sizing: border-box !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  clip-path: none !important;
+  transform-origin: center !important;
+  transform: translate3d(var(--voltura-pan-x, 0px), var(--voltura-pan-y, 0px), 0)
+    scale(var(--voltura-zoom, 1)) !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  z-index: 2147483645 !important;
+}

@@ -1,26 +1,47 @@
 <!doctype html>
 <html lang="en" data-skin="midnight">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="icons/32.png">
-  <link rel="stylesheet" href="themes.css">
-  <link rel="stylesheet" href="settings.css">
-  <script type="module" src="settings.js"></script>
-  <title>Voltura Reel Player</title>
-</head>
-<body>
-  <header>
-    <img id="brand" src="icons/32.png" alt="" width="32" height="32">
-    <h1>Voltura Reel Player</h1>
-  </header>
-  <main>
-    <label for="theme">Theme</label>
-    <select id="theme" disabled></select>
-    <p id="status" role="status" hidden></p>
-  </main>
-  <footer>
-    <a href="https://reels.voltura.se/" target="_blank" rel="noopener noreferrer">Product page <span aria-hidden="true">↗</span></a>
-  </footer>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="icons/32.png" />
+    <link rel="stylesheet" href="themes.css" />
+    <link rel="stylesheet" href="settings.css" />
+    <script type="module" src="settings.js"></script>
+    <title>Voltura Reel Player</title>
+  </head>
+  <body>
+    <header>
+      <img id="brand" src="icons/32.png" alt="" width="32" height="32" />
+      <h1>Voltura Reel Player</h1>
+    </header>
+    <main>
+      <label for="theme" data-message="Theme">Theme</label>
+      <select id="theme" disabled></select>
+      <span id="language-label" data-message="Language">Language</span>
+      <button
+        id="language-trigger"
+        type="button"
+        aria-labelledby="language-label language-current"
+        aria-expanded="false"
+        aria-controls="language-options"
+        disabled
+      >
+        <img alt="" width="21" height="14" /><span id="language-current"></span
+        ><span aria-hidden="true">⌄</span>
+      </button>
+      <div id="language-options" role="group" aria-labelledby="language-label" hidden></div>
+      <label for="dockWidth" data-message="Control bar width">Control bar width</label>
+      <select id="dockWidth" disabled></select>
+      <label for="loopStyle" data-message="Segment repeat">Segment repeat</label>
+      <select id="loopStyle" disabled></select>
+      <label for="controlsVisibility" data-message="Control visibility">Control visibility</label>
+      <select id="controlsVisibility" disabled></select>
+      <p id="status" role="status" hidden></p>
+    </main>
+    <footer>
+      <a href="https://reels.voltura.se/" target="_blank" rel="noopener noreferrer"
+        ><span data-message="Product page">Product page</span><span aria-hidden="true">↗</span></a
+      >
+    </footer>
+  </body>
 </html>

@@ -1,10 +1,110 @@
-:root[data-skin="retro-wood"]{--theme-accent:#edbf7f;--theme-accent-hover:#ffdaa7;--theme-on-accent:#271b0c;--theme-surface:#30261e;--theme-raised:#413327;--theme-active:#493720;--theme-on-surface:#f8efdf;--theme-border:#68523e;--theme-link:#795022;}
-:root[data-skin="modern-metallic"]{--theme-accent:#9ad6fa;--theme-accent-hover:#c8e9ff;--theme-on-accent:#102a3c;--theme-surface:#252e39;--theme-raised:#324150;--theme-active:#293f53;--theme-on-surface:#eaf2f9;--theme-border:#4d6277;--theme-link:#245f83;}
-:root[data-skin="modern-black"]{--theme-accent:#d0d0df;--theme-accent-hover:#ececf5;--theme-on-accent:#1b1b24;--theme-surface:#1c1c20;--theme-raised:#2b2b31;--theme-active:#33333e;--theme-on-surface:#f3f3f6;--theme-border:#484851;--theme-link:#444450;}
-:root[data-skin="midnight"]{--theme-accent:#9dd4ff;--theme-accent-hover:#c7e7ff;--theme-on-accent:#10273b;--theme-surface:#141f30;--theme-raised:#203149;--theme-active:#1c3652;--theme-on-surface:#ecf5ff;--theme-border:#39516e;--theme-link:#275f94;}
-:root[data-skin="matrix"]{--theme-accent:#79e699;--theme-accent-hover:#b0f7c4;--theme-on-accent:#072812;--theme-surface:#0d1b11;--theme-raised:#192d1e;--theme-active:#183c24;--theme-on-surface:#e3f9e9;--theme-border:#315c3d;--theme-link:#1b6c33;}
-:root[data-skin="blood-red"]{--theme-accent:#f36a71;--theme-accent-hover:#ff969d;--theme-on-accent:#290509;--theme-surface:#281215;--theme-raised:#3b1c21;--theme-active:#481b22;--theme-on-surface:#fff0f0;--theme-border:#70414a;--theme-link:#8c1524;}
-:root[data-skin="burnt-orange"]{--theme-accent:#ff963b;--theme-accent-hover:#ffba72;--theme-on-accent:#301203;--theme-surface:#411b08;--theme-raised:#5a2b10;--theme-active:#632c0b;--theme-on-surface:#fff1e3;--theme-border:#834526;--theme-link:#994015;}
-:root[data-skin="golden-god"]{--theme-accent:#ffd13d;--theme-accent-hover:#ffe885;--theme-on-accent:#201500;--theme-surface:#402d00;--theme-raised:#624700;--theme-active:#594000;--theme-on-surface:#fff8df;--theme-border:#aa811c;--theme-link:#7d5a00;}
-:root[data-skin="pink-panther"]{--theme-accent:#ff80c9;--theme-accent-hover:#ffb2dd;--theme-on-accent:#30071f;--theme-surface:#44132f;--theme-raised:#5c1b42;--theme-active:#621c46;--theme-on-surface:#fff0f8;--theme-border:#954268;--theme-link:#a01461;}
-:root[data-skin="forest"]{--theme-accent:#8dd7ad;--theme-accent-hover:#b3e9c8;--theme-on-accent:#10291c;--theme-surface:#192720;--theme-raised:#24362c;--theme-active:#213e2d;--theme-on-surface:#eef5ed;--theme-border:#344b3d;--theme-link:#126a50;}
+:root[data-skin='retro-wood'] {
+  --theme-accent: #edbf7f;
+  --theme-accent-hover: #ffdaa7;
+  --theme-on-accent: #271b0c;
+  --theme-surface: #30261e;
+  --theme-raised: #413327;
+  --theme-active: #493720;
+  --theme-on-surface: #f8efdf;
+  --theme-border: #68523e;
+  --theme-link: #795022;
+}
+:root[data-skin='modern-metallic'] {
+  --theme-accent: #9ad6fa;
+  --theme-accent-hover: #c8e9ff;
+  --theme-on-accent: #102a3c;
+  --theme-surface: #252e39;
+  --theme-raised: #324150;
+  --theme-active: #293f53;
+  --theme-on-surface: #eaf2f9;
+  --theme-border: #4d6277;
+  --theme-link: #245f83;
+}
+:root[data-skin='modern-black'] {
+  --theme-accent: #d0d0df;
+  --theme-accent-hover: #ececf5;
+  --theme-on-accent: #1b1b24;
+  --theme-surface: #1c1c20;
+  --theme-raised: #2b2b31;
+  --theme-active: #33333e;
+  --theme-on-surface: #f3f3f6;
+  --theme-border: #484851;
+  --theme-link: #444450;
+}
+:root[data-skin='midnight'] {
+  --theme-accent: #9dd4ff;
+  --theme-accent-hover: #c7e7ff;
+  --theme-on-accent: #10273b;
+  --theme-surface: #141f30;
+  --theme-raised: #203149;
+  --theme-active: #1c3652;
+  --theme-on-surface: #ecf5ff;
+  --theme-border: #39516e;
+  --theme-link: #275f94;
+}
+:root[data-skin='matrix'] {
+  --theme-accent: #79e699;
+  --theme-accent-hover: #b0f7c4;
+  --theme-on-accent: #072812;
+  --theme-surface: #0d1b11;
+  --theme-raised: #192d1e;
+  --theme-active: #183c24;
+  --theme-on-surface: #e3f9e9;
+  --theme-border: #315c3d;
+  --theme-link: #1b6c33;
+}
+:root[data-skin='blood-red'] {
+  --theme-accent: #f36a71;
+  --theme-accent-hover: #ff969d;
+  --theme-on-accent: #290509;
+  --theme-surface: #281215;
+  --theme-raised: #3b1c21;
+  --theme-active: #481b22;
+  --theme-on-surface: #fff0f0;
+  --theme-border: #70414a;
+  --theme-link: #8c1524;
+}
+:root[data-skin='burnt-orange'] {
+  --theme-accent: #ff963b;
+  --theme-accent-hover: #ffba72;
+  --theme-on-accent: #301203;
+  --theme-surface: #411b08;
+  --theme-raised: #5a2b10;
+  --theme-active: #632c0b;
+  --theme-on-surface: #fff1e3;
+  --theme-border: #834526;
+  --theme-link: #994015;
+}
+:root[data-skin='golden-god'] {
+  --theme-accent: #ffd13d;
+  --theme-accent-hover: #ffe885;
+  --theme-on-accent: #201500;
+  --theme-surface: #402d00;
+  --theme-raised: #624700;
+  --theme-active: #594000;
+  --theme-on-surface: #fff8df;
+  --theme-border: #aa811c;
+  --theme-link: #7d5a00;
+}
+:root[data-skin='pink-panther'] {
+  --theme-accent: #ff80c9;
+  --theme-accent-hover: #ffb2dd;
+  --theme-on-accent: #30071f;
+  --theme-surface: #44132f;
+  --theme-raised: #5c1b42;
+  --theme-active: #621c46;
+  --theme-on-surface: #fff0f8;
+  --theme-border: #954268;
+  --theme-link: #a01461;
+}
+:root[data-skin='forest'] {
+  --theme-accent: #8dd7ad;
+  --theme-accent-hover: #b3e9c8;
+  --theme-on-accent: #10291c;
+  --theme-surface: #192720;
+  --theme-raised: #24362c;
+  --theme-active: #213e2d;
+  --theme-on-surface: #eef5ed;
+  --theme-border: #344b3d;
+  --theme-link: #126a50;
+}

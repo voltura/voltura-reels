@@ -1,9 +1,19 @@
 # Voltura Reel Player
 
-A Chrome extension for Facebook Reels with fullscreen playback, precise seeking, variable speed, segment repeat, and zoom.
+Watch Facebook Reels fullscreen in Chrome. Step through a moment, repeat a section, or zoom in on a detail.
 
-The development build currently includes the toolbar settings. Open the extension icon to change the theme or visit the product page.
+[Product site and demo](https://reels.voltura.se/) · [Privacy](https://reels.voltura.se/privacy.html)
 
-The extension lives on `main`. The product site is published from `gh-pages` at [reels.voltura.se](https://reels.voltura.se/).
+## What you can do
 
-Run `npm run check`, `npm test`, and `npm run build` from the repository root. Load `dist/extension` as an unpacked extension in Chrome for local development.
+- Switch between reels in fullscreen.
+- Scrub the timeline, step by 0.1 seconds, or play at 0.10× to 4× speed.
+- Repeat the whole reel or select a segment with range handles or A/B marks.
+- Zoom up to 10×, pan, and save an available paused frame as a full-resolution PNG.
+- Hide reel overlays and choose your theme, language, and control bar width.
+
+## Using the player
+
+Open a Facebook reel and select the fullscreen button above the reel navigation. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **Esc** to leave fullscreen.
+
+To repeat a segment, drag the range handles or Shift-drag on the timeline, then turn on Repeat. Open the extension from Chrome’s toolbar to change your preferences.

@@ -1,0 +1,263 @@
+<button
+  class="overlay-button launch"
+  aria-label="Fullscreen reel"
+  data-icon="maximize"
+  data-keys="F"
+></button>
+<div class="launch-notice osd" role="status" hidden></div>
+<section class="stage" aria-label="Reel playback" hidden>
+  <div class="player-layout">
+    <div class="viewport" tabindex="0" aria-label="Video. Press Space to play or pause."></div>
+    <div class="utilities">
+      <button
+        id="overlay"
+        class="overlay-button"
+        data-icon="eye"
+        aria-label="Hide overlays"
+        data-keys="H"
+      ></button>
+      <div class="utility-end">
+        <button
+          id="zoom-out"
+          class="overlay-button"
+          data-icon="minus"
+          aria-label="Zoom out"
+          data-keys="−"
+        ></button>
+        <button id="zoom-reset" class="overlay-button zoom" aria-label="Reset zoom" data-keys="0" hidden>
+          <span class="control-value">1×</span>
+        </button>
+        <button
+          id="zoom-in"
+          class="overlay-button"
+          data-icon="plus"
+          aria-label="Zoom in"
+          data-keys="+"
+        ></button>
+        <button
+          id="frame"
+          class="overlay-button"
+          data-icon="camera"
+          aria-label="Save frame as PNG"
+          data-keys="S"
+        ></button>
+        <button
+          id="exit"
+          class="overlay-button"
+          data-icon="minimize"
+          aria-label="Exit fullscreen"
+          data-keys="Esc"
+        ></button>
+      </div>
+    </div>
+    <div id="creator" class="creator" hidden>
+      <div class="creator-header">
+        <a id="owner" class="creator-name" target="_blank" rel="noopener noreferrer">
+          <img id="creator-photo" alt="" width="32" height="32" referrerpolicy="no-referrer" hidden />
+          <span id="creator-name"></span>
+        </a>
+        <button type="button" id="creator-follow" class="creator-follow" hidden></button>
+      </div>
+      <div id="caption" class="caption"></div>
+      <button
+        id="caption-more"
+        class="caption-more"
+        aria-controls="caption"
+        aria-expanded="false"
+        hidden
+      ></button>
+    </div>
+    <div id="social" class="social">
+      <button id="like" data-icon="like" aria-label="Like reel"></button>
+      <button id="comments" data-icon="message" aria-label="Comments"></button>
+      <button id="share" data-icon="share" aria-label="Share reel"></button>
+      <button id="save" data-icon="bookmark" aria-label="Save reel on Facebook"></button>
+      <button id="more" data-icon="more" aria-label="More options on Facebook"></button>
+    </div>
+    <div class="osd" role="status" hidden></div>
+    <div class="dock" role="group" aria-label="Playback controls">
+      <div class="scrubber">
+        <div class="timebar">
+          <div class="played"></div>
+          <div class="loop-band" hidden></div>
+        </div>
+        <input
+          id="timeline"
+          type="range"
+          min="0"
+          max="0"
+          step="0.1"
+          value="0"
+          aria-label="Playback position"
+        />
+        <div class="indicator"></div>
+        <div
+          class="handle"
+          id="loop-start"
+          role="slider"
+          tabindex="0"
+          aria-label="Loop start"
+          hidden
+        ></div>
+        <div class="handle" id="loop-end" role="slider" tabindex="0" aria-label="Loop end" hidden></div>
+        <span class="loop-marker" id="marker-start" aria-hidden="true" hidden>A</span>
+        <span class="loop-marker" id="marker-end" aria-hidden="true" hidden>B</span>
+        <div class="hover-time" hidden></div>
+      </div>
+      <div class="dock-row">
+        <div class="transport">
+          <button
+            id="play"
+            class="dock-button play"
+            data-icon="play"
+            aria-label="Play"
+            data-keys="Space|K"
+          ></button>
+          <div class="seek-controls" role="group" aria-label="Navigate reels and seek">
+            <button
+              id="previous"
+              class="dock-button step"
+              data-icon="previous"
+              aria-label="Previous reel"
+              data-keys="↑|PgUp"
+            ></button>
+            <button
+              id="back"
+              class="dock-button step"
+              data-icon="left"
+              aria-label="Back 0.1 seconds"
+              data-keys="←|Shift+← (5s)"
+            ></button>
+            <button
+              id="forward"
+              class="dock-button step"
+              data-icon="right"
+              aria-label="Forward 0.1 seconds"
+              data-keys="→|Shift+→ (5s)"
+            ></button>
+            <button
+              id="next"
+              class="dock-button step"
+              data-icon="next"
+              aria-label="Next reel"
+              data-keys="↓|PgDn"
+            ></button>
+          </div>
+          <output class="timecode" aria-live="off"
+            ><span id="elapsed"></span><span id="duration" class="total"></span
+          ></output>
+        </div>
+        <div class="loop-controls">
+          <button
+            id="select-range"
+            class="dock-button"
+            data-icon="handles"
+            aria-label="Select a range"
+            data-keys="Shift+drag"
+          ></button>
+          <div id="loop-marks" class="loop-marks" hidden>
+            <button
+              id="mark-start"
+              class="text-button mark"
+              aria-label="Set start at playhead"
+              aria-keyshortcuts="["
+              data-keys="["
+              aria-pressed="false"
+            >
+              A
+            </button>
+            <button
+              id="mark-end"
+              class="text-button mark"
+              aria-label="Set end at playhead"
+              aria-keyshortcuts="]"
+              data-keys="]"
+              aria-pressed="false"
+            >
+              B
+            </button>
+          </div>
+          <span class="loop-readout" hidden></span>
+          <button
+            id="clear"
+            class="dock-button clear"
+            data-icon="x"
+            aria-label="Clear loop"
+            data-keys="Shift+L"
+            hidden
+          ></button>
+          <button
+            id="repeat"
+            class="dock-button"
+            data-icon="repeat"
+            aria-label="Repeat whole reel"
+            aria-keyshortcuts="L"
+            data-keys="L"
+            aria-pressed="false"
+          ></button>
+        </div>
+        <div class="extras">
+          <div class="popover-wrap">
+            <button
+              id="rate"
+              class="text-button speed"
+              aria-label="Playback speed"
+              data-keys="R"
+              aria-expanded="false"
+              aria-controls="rates"
+            >
+              <span class="control-value">1×</span>
+            </button>
+            <div
+              id="rates"
+              class="popover speed-options"
+              aria-label="Playback speed"
+              role="group"
+              hidden
+            ></div>
+          </div>
+          <div class="popover-wrap volume">
+            <button
+              id="mute"
+              class="dock-button"
+              data-icon="sound"
+              aria-label="Mute"
+              data-keys="M"
+            ></button>
+            <button
+              id="volume-button"
+              class="dock-button chevron"
+              data-icon="up"
+              aria-label="Adjust volume"
+              data-keys="V"
+              aria-expanded="false"
+              aria-controls="volume-popover"
+            ></button>
+            <div id="volume-popover" class="popover" hidden>
+              <label for="volume"
+                ><span data-text="Volume">Volume</span> <output id="volume-value"></output
+              ></label>
+              <input id="volume" type="range" min="0" max="100" aria-label="Volume" />
+            </div>
+          </div>
+          <button
+            id="cc"
+            class="dock-button"
+            data-icon="cc"
+            aria-label="Spoken captions"
+            data-keys="C"
+            aria-pressed="false"
+            hidden
+          ></button>
+          <button
+            id="exit-dock"
+            class="dock-button"
+            data-icon="minimize"
+            aria-label="Exit fullscreen"
+            data-keys="F|Esc"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

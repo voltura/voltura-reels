@@ -30,9 +30,18 @@ export function validTheme(value) {
   return Object.hasOwn(themeNames, value) ? value : defaultTheme;
 }
 
-export const playbackRates = Object.freeze([
-  0.10, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4,
-]);
+export const playerSettings = {
+  dockWidth: { auto: 'Automatic', small: 'Small', normal: 'Normal', wide: 'Wide' },
+  loopStyle: { handles: 'Range handles', marks: 'A/B marks' },
+  controlsVisibility: { fade: 'Fade on idle', always: 'Always visible' },
+};
+
+export function playerSetting(key, value) {
+  const choices = playerSettings[key];
+  return Object.hasOwn(choices, value) ? value : Object.keys(choices)[0];
+}
+
+export const playbackRates = Object.freeze([0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4]);
 
 export function formatPlaybackRate(rate) {
   return `${rate === 0.1 ? '0.10' : rate}×`;

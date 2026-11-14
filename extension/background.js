@@ -19,16 +19,20 @@ async function updateIcon() {
   const stored = await chrome.storage.local.get(themeKey);
   const theme = validTheme(stored[themeKey]);
   if (theme === defaultTheme) {
-    await chrome.action.setIcon({ path: Object.fromEntries(sizes.map(size => [size, `icons/${size}.png`])) });
+    await chrome.action.setIcon({
+      path: Object.fromEntries(sizes.map((size) => [size, `icons/${size}.png`])),
+    });
     return;
   }
-  const pixels = await Promise.all(sizes.map(size => renderIcon(size, theme)));
+  const pixels = await Promise.all(sizes.map((size) => renderIcon(size, theme)));
   await chrome.action.setIcon({ imageData: Object.fromEntries(pixels) });
 }
 
 let pending = Promise.resolve();
 function refreshIcon() {
-  pending = pending.then(updateIcon).catch(error => console.warn('Could not update the Reel Player icon', error));
+  pending = pending
+    .then(updateIcon)
+    .catch((error) => console.warn('Could not update the Reel Player icon', error));
 }
 
 chrome.runtime.onInstalled.addListener(refreshIcon);
