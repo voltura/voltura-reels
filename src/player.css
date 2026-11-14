@@ -13,9 +13,11 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 .utilities{position:absolute;inset:10px 10px auto;z-index:6;display:flex;justify-content:space-between;align-items:start;pointer-events:none}
 .utilities button{pointer-events:auto}
-.utility-end{display:flex;gap:6px;transition:opacity .24s}
-.utilities-idle .utility-end:not(:has(:focus-visible)){opacity:0}
-.utilities-idle .utility-end:not(:has(:focus-visible)) button{pointer-events:none}
+.utility-end{display:flex;gap:6px}
+:is(#overlay,.utility-end,.social){transition:opacity .24s}
+.controls-idle:not(.controls-always) :is(#overlay,.social),
+.controls-idle .utility-end{opacity:0;pointer-events:none}
+.controls-idle .utility-end button{pointer-events:none}
 .stage button:focus-visible,.stage input:focus-visible,.stage [tabindex]:focus-visible{outline-color:var(--theme-accent)}
 .overlay-button,.dock-button,.text-button{display:inline-flex;align-items:center;justify-content:center;flex:none}
 .overlay-button{width:34px;height:34px;border-radius:8px;border:1px solid var(--theme-border);background:color-mix(in srgb,var(--theme-surface) 88%,transparent);color:var(--theme-on-surface)}
@@ -67,8 +69,6 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
 .dock[data-width="wide"]{max-width:none}
 .dock.faded{opacity:0;transform:translateY(4px);pointer-events:none}
 .dock.faded:has(:focus-visible){opacity:1;transform:none;pointer-events:auto}
-#overlay{transition:opacity .24s}
-.player-layout.overlay-toggle-faded #overlay:not(:focus-visible){opacity:0;pointer-events:none}
 .player-layout:has(.dock.faded) .creator{bottom:14px}
 .dock-row{min-height:34px;display:flex;align-items:center;gap:7px}
 .transport,.seek-controls,.extras,.loop-controls,.loop-marks,.volume{display:flex;align-items:center;gap:3px}
@@ -160,7 +160,7 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
 .utilities #overlay .tooltip{left:0}
 .utility-end .tooltip,.launch .tooltip{left:auto;right:0}
 #exit-dock .tooltip{left:auto;right:-4px;transform:none}
-.dock.faded .tooltip,.overlay-toggle-faded #overlay .tooltip,[data-tip][aria-expanded="true"] > .tooltip{opacity:0}
+.dock.faded .tooltip,[data-tip][aria-expanded="true"] > .tooltip{opacity:0}
 @container (max-width:570px){
   .dock-row{gap:2px}
   .extras,.transport,.seek-controls,.loop-controls{gap:1px}

@@ -68,6 +68,7 @@ export class ReelPlayer {
     if (key === 'dockWidth') this.dock.dataset.width = setting;
     if (key === 'controlsVisibility') {
       this.controlsVisibility = setting;
+      this.layout.classList.toggle('controls-always', setting === 'always');
       this.reveal();
     }
     if (key === 'loopStyle' && setting !== this.loopStyle) {
@@ -328,16 +329,18 @@ export class ReelPlayer {
     if (!this.active) return;
     clearTimeout(this.revealTimer);
     this.dock.classList.remove('faded');
-    this.layout.classList.remove('overlay-toggle-faded', 'utilities-idle');
+    this.layout.classList.remove('controls-idle');
     if (this.controlsVisibility === 'always' && !this.hiddenOverlay) return;
     this.revealTimer = setTimeout(() => {
-      if (this.hiddenOverlay) this.layout.classList.add('utilities-idle');
-      if (this.controlsVisibility === 'always') return;
       const menuOpen = !this.get('rates').hidden || !this.get('volume-popover').hidden;
       const keyboardFocus = this.ui.activeElement !== this.viewport && this.ui.activeElement?.matches(':focus-visible');
-      if (this.gesture || this.rangeDrag || this.pan || this.hold || menuOpen || keyboardFocus) return;
-      this.layout.classList.add('overlay-toggle-faded');
-      if (!this.dock.matches(':hover') && !this.video.paused && !this.video.ended) this.dock.classList.add('faded');
+      const hovering = matchMedia('(hover: hover)').matches &&
+        this.ui.querySelector(':is(#overlay, .utility-end, .social, .creator, .dock):hover');
+      if (hovering || keyboardFocus || menuOpen || this.scrubbing || this.gesture || this.rangeDrag || this.pan || this.hold) return;
+      this.layout.classList.add('controls-idle');
+      if (this.controlsVisibility !== 'always' && !this.video.paused && !this.video.ended) {
+        this.dock.classList.add('faded');
+      }
     }, 1550);
   }
 
@@ -875,7 +878,11 @@ export class ReelPlayer {
       if (!event.target.closest('.popover-wrap')) this.closePopovers();
     });
     this.on(this.stage, 'pointermove', () => this.reveal());
-    this.on(this.dock, 'pointerleave', () => this.reveal());
+    for (const controls of this.ui.querySelectorAll('#overlay, .utility-end, .social, .creator, .dock')) {
+      this.on(controls, 'pointerleave', () => {
+        if (!this.layout.classList.contains('controls-idle')) this.reveal();
+      });
+    }
     this.on(this.stage, 'focusin', () => this.reveal());
     this.on(this.stage, 'focusout', () => queueMicrotask(() => this.reveal()));
     this.on(document, 'fullscreenchange', () => {
@@ -1034,6 +1041,7 @@ export class ReelPlayer {
     if (!this.scrubbing) return;
     this.scrubbing = false;
     if (this.active && !this.video.paused) this.resumeInsideLoop();
+    this.reveal();
   }
 
   finishHandleDrag(pointerId) {
