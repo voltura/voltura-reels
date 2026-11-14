@@ -1,32 +1,104 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Fullscreen playback, precise seeking, segment repeat and zoom for Facebook Reels on desktop.">
-  <link rel="canonical" href="https://reels.voltura.se/">
-  <link rel="icon" type="image/png" href="icon.png">
-  <link rel="stylesheet" href="site.css">
-  <title>Voltura Reel Player</title>
-</head>
-<body>
-  <main>
-    <header>
-      <img src="icon.png" alt="" width="80" height="80">
-      <h1>Voltura Reel Player</h1>
-      <p>Watch Facebook Reels fullscreen in Chrome. Step through a moment, repeat a section, or zoom in on a detail.</p>
-      <p class="status">In development. Chrome Web Store release pending.</p>
-    </header>
-    <section aria-labelledby="features">
-      <h2 id="features">Playback controls</h2>
-      <ul>
-        <li>Go to the previous or next reel in fullscreen.</li>
-        <li>Step by 0.1 seconds, drag the timeline, or play at 0.10× to 4× speed.</li>
-        <li>Repeat a selected range and zoom up to 10× with panning.</li>
-        <li>Save an available paused frame as a full-resolution PNG.</li>
-      </ul>
-    </section>
-    <footer>Voltura AB · Independent of Meta · <a href="https://github.com/voltura/voltura-reels">Project on GitHub</a></footer>
-  </main>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Watch Facebook Reels fullscreen in Chrome with precise seeking, segment repeat, zoom, and frame capture."
+    />
+    <meta property="og:title" content="Voltura Reel Player" />
+    <meta
+      property="og:image"
+      content="https://reels.voltura.se/media/01-fullscreen.webp"
+    />
+    <link rel="canonical" href="https://reels.voltura.se/" />
+    <link rel="icon" href="icon.png" />
+    <link rel="stylesheet" href="site.css" />
+    <title>Voltura Reel Player</title>
+  </head>
+  <body>
+    <main class="container">
+      <header class="masthead">
+        <a href="./"
+          ><img src="icon.png" alt="" width="36" height="36" />Voltura Reel
+          Player</a
+        >
+      </header>
+      <section class="hero" aria-labelledby="headline">
+        <div>
+          <h1 id="headline">Facebook Reels, fullscreen.</h1>
+          <p>
+            Step through a moment, repeat a section, or zoom in on a detail with
+            a desktop player for Chrome.
+          </p>
+          <nav aria-label="Product links">
+            <a class="primary" href="#demo">Watch the demo</a
+            ><a href="#playback">Explore the controls</a>
+          </nav>
+        </div>
+        <img
+          class="screen"
+          src="media/01-fullscreen.webp"
+          width="1280"
+          height="800"
+          alt="Voltura Reel Player showing a mountain road with its fullscreen playback controls."
+        />
+      </section>
+      <section id="playback" class="features" aria-label="Playback features">
+        <article>
+          <h2>Find the exact moment</h2>
+          <p>
+            Scrub a wider timeline, step by 0.1 seconds, and adjust playback
+            speed from 0.10× to 4×.
+          </p>
+        </article>
+        <article>
+          <h2>Repeat a section</h2>
+          <p>
+            Drag the range handles or set A and B marks. Repeat the selection or
+            the entire reel.
+          </p>
+        </article>
+        <article>
+          <h2>Look closer</h2>
+          <p>
+            Zoom up to 10×, pan across the video, and save an available paused
+            frame as a full-resolution PNG.
+          </p>
+        </article>
+        <article>
+          <h2>Keep watching</h2>
+          <p>
+            Switch reels in fullscreen. Hide overlays and choose a theme,
+            language, and control bar width.
+          </p>
+        </article>
+      </section>
+      <section id="demo" class="demo">
+        <h2>See it in action</h2>
+        <video
+          class="screen"
+          controls
+          playsinline
+          preload="none"
+          poster="media/01-fullscreen.webp"
+        >
+          <source src="media/voltura-reel-player.mp4" type="video/mp4" />
+          <track
+            kind="captions"
+            src="media/demo.en.vtt"
+            srclang="en"
+            label="English"
+          />
+        </video>
+        <p><a href="https://youtu.be/zZZpDCErexY">Watch on YouTube</a></p>
+      </section>
+    </main>
+    <footer class="container footer">
+      <span>Voltura AB · Independent of Meta</span
+      ><a href="privacy.html">Privacy</a
+      ><a href="https://github.com/voltura/voltura-reels">GitHub</a>
+    </footer>
+  </body>
 </html>
