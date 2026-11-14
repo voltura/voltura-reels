@@ -15,12 +15,18 @@
     <h1>Voltura Reel Player</h1>
   </header>
   <main>
-    <label for="theme">Theme</label>
+    <label for="theme" data-message="Theme">Theme</label>
     <select id="theme" disabled></select>
+    <span id="language-label" data-message="Language">Language</span>
+    <button id="language-trigger" type="button" aria-labelledby="language-label language-current"
+      aria-expanded="false" aria-controls="language-options" disabled>
+      <img alt="" width="21" height="14"><span id="language-current"></span><span aria-hidden="true">⌄</span>
+    </button>
+    <div id="language-options" role="group" aria-labelledby="language-label" hidden></div>
     <p id="status" role="status" hidden></p>
   </main>
   <footer>
-    <a href="https://reels.voltura.se/" target="_blank" rel="noopener noreferrer">Product page <span aria-hidden="true">↗</span></a>
+    <a href="https://reels.voltura.se/" target="_blank" rel="noopener noreferrer"><span data-message="Product page">Product page</span><span aria-hidden="true">↗</span></a>
   </footer>
 </body>
 </html>

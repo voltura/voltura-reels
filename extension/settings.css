@@ -10,7 +10,7 @@ header { display: flex; gap: 10px; align-items: center; padding: 16px; }
 h1 { margin: 0; font-size: 15px; font-weight: 650; }
 main { display: grid; gap: 8px; padding: 4px 16px 18px; }
 label { font-weight: 600; }
-select {
+select, #language-trigger {
   width: 100%;
   background: var(--theme-raised);
   color: inherit;
@@ -19,6 +19,32 @@ select {
   font: inherit;
   padding: 8px;
 }
+#language-label { margin-top: 4px; font-weight: 600; }
+#language-trigger, #language-options button { display: flex; align-items: center; gap: 10px; text-align: start; }
+#language-trigger span:last-child { margin-inline-start: auto; }
+#language-trigger img, #language-options img { flex: none; object-fit: cover; }
+#language-options {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-accent) var(--theme-surface);
+  padding: 4px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+}
+#language-options button {
+  width: 100%;
+  border: 0;
+  padding: 8px;
+  border-radius: 5px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+#language-options button:hover, #language-options button[aria-pressed="true"] { background: var(--theme-active); }
+#language-options button:focus-visible { outline-offset: -2px; }
+#language-options .selected { margin-inline-start: auto; color: var(--theme-accent); }
 #status { margin: 0; font-size: 12px; }
 footer { border-top: 1px solid var(--theme-border); padding: 12px 16px; }
 footer a { display: flex; justify-content: space-between; color: var(--theme-accent); text-decoration: none; }
