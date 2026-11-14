@@ -1,4 +1,5 @@
 const controls = '[role="button"], button';
+const captionExcluded = `${controls}, style, script, template, noscript, svg, [hidden], [aria-hidden="true"]`;
 const labels = {
   previous: /^(previous (reel|card|video)|föregående (reel|kort|video))$/i,
   next: /^(next (reel|card|video)|nästa (reel|kort|video))$/i,
@@ -96,6 +97,32 @@ export function setReelVolume(reel, volume) {
   slider.dispatchEvent(new MouseEvent('mouseup', options));
 }
 
+function captionText(caption) {
+  let text = '';
+  function lineBreak() {
+    if (text && !text.endsWith('\n')) text += '\n';
+  }
+  function read(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.data;
+      return;
+    }
+    if (!(node instanceof Element) || node.matches(captionExcluded)) return;
+    const { display } = getComputedStyle(node);
+    if (display === 'none') return;
+    if (node.localName === 'br') {
+      text += '\n';
+      return;
+    }
+    const block = /^(block|flow-root|flex|grid|list-item|table)$/.test(display);
+    if (block) lineBreak();
+    for (const child of node.childNodes) read(child);
+    if (block) lineBreak();
+  }
+  read(caption);
+  return text.replace(/[^\S\r\n]+/g, ' ').replace(/ *(\r?\n) */g, '$1').trim();
+}
+
 export function reelMetadata(reel) {
   const links = Array.from(reel.card.querySelectorAll('a[aria-label]'))
     .filter(element => labels.owner.test(name(element)));
@@ -103,25 +130,24 @@ export function reelMetadata(reel) {
   const heading = owner?.closest('h1,h2,h3,h4,[role="heading"]');
   const photo = links.map(link => link.querySelector('img, svg image')).find(Boolean);
   let follow;
-  let caption;
+  let caption = '';
+  let more;
   for (let element = heading; element && element !== reel.card; element = element.parentElement) {
     follow ??= findButton(element, 'follow');
     const next = element.nextElementSibling;
-    if (next?.textContent.trim() && !next.matches(controls) && !findButton(next, 'follow')) {
-      caption = next;
-      break;
-    }
+    if (!next || next.matches(captionExcluded) || findButton(next, 'follow')) continue;
+    caption = captionText(next);
+    if (!caption) continue;
+    more = findButton(next, 'expand');
+    break;
   }
-  const more = caption && findButton(caption, 'expand');
-  const description = caption?.cloneNode(true);
-  for (const button of description?.querySelectorAll(controls) ?? []) button.remove();
   const profile = owner?.href ?? links[0]?.href;
   return {
     owner: owner?.textContent.trim() ?? '',
     profile: profile?.startsWith(`${location.origin}/`) ? profile : undefined,
     photo: photo?.currentSrc || photo?.getAttribute('src') || photo?.getAttribute('href') || photo?.getAttribute('xlink:href'),
     follow: follow?.textContent.trim() || (follow && name(follow)),
-    caption: description?.textContent.trim() ?? '',
+    caption,
     more,
   };
 }

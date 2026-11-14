@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Voltura Reel Player",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Fullscreen playback controls for Facebook Reels.",
   "homepage_url": "https://reels.voltura.se/",
   "permissions": ["storage"],
