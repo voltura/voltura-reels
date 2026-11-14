@@ -25,11 +25,17 @@ function schedule() {
 }
 
 const observer = new MutationObserver(records => {
-  if ((player || reelRoute(location)) && records.some(record => record.target.localName !== 'voltura-reel-player')) schedule();
+  if ((player || reelRoute(location)) && records.some(record => {
+    if (record.type === 'characterData') {
+      const control = record.target.parentElement?.closest('button, [role="button"], a[href], [role="link"]');
+      return player?.active && control && player.reel.card.contains(control);
+    }
+    return record.target.localName !== 'voltura-reel-player';
+  })) schedule();
 });
 observer.observe(document.documentElement, {
-  subtree: true, childList: true, attributes: true,
-  attributeFilter: ['src', 'loop', 'aria-disabled', 'aria-pressed', 'aria-label'],
+  subtree: true, childList: true, characterData: true, attributes: true,
+  attributeFilter: ['src', 'loop', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-label'],
 });
 navigation.addEventListener('currententrychange', schedule);
 window.addEventListener('resize', schedule);

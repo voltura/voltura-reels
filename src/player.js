@@ -691,7 +691,7 @@ export class ReelPlayer {
     this.label(overlay, this.hiddenOverlay ? 'Restore overlays' : 'Hide overlays');
     overlay.setAttribute('aria-pressed', String(this.hiddenOverlay));
     this.get('social').hidden = this.hiddenOverlay;
-    const { owner, profile, photo, follow, caption, more } = reelMetadata(this.reel);
+    const { owner, profile, photo, follow, followControl, caption, more } = reelMetadata(this.reel);
     this.captionSource = more;
     this.get('creator').hidden = this.hiddenOverlay || !(owner || caption.text);
     this.get('owner').parentElement.hidden = !owner;
@@ -704,6 +704,7 @@ export class ReelPlayer {
     else if (!photo) avatar.removeAttribute('src');
     const followState = this.get('creator-follow');
     followState.hidden = !follow;
+    followState.disabled = !isEnabled(followControl);
     if (followState.textContent !== (follow ?? '')) followState.textContent = follow ?? '';
     const captionBox = this.get('caption');
     const captionKey = JSON.stringify(caption);
@@ -820,6 +821,11 @@ export class ReelPlayer {
     click('zoom-reset', () => this.zoomAt(1));
     for (const action of ['previous', 'next']) click(action, () => this.navigate(action));
     click('like', () => nativeAction(this.reel, 'like'));
+    click('creator-follow', () => {
+      const { followControl } = reelMetadata(this.reel);
+      if (isEnabled(followControl)) followControl.click();
+      this.renderOverlay();
+    });
     click('save', () => void this.saveOnFacebook());
     for (const action of ['comments', 'share', 'more']) click(action, () => void this.openFacebookAction(action));
     click('cc', () => this.setCaptions());

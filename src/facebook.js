@@ -55,6 +55,18 @@ function findButton(scope, action) {
     .find(element => labels[action].test(name(element)) && element.getClientRects().length);
 }
 
+function findFollowControl(scope) {
+  const selector = `${controls}, a[href], [role="link"]`;
+  const candidates = scope.matches(selector) ? [scope] : scope.querySelectorAll(selector);
+  return Array.from(candidates).find(element => {
+    const label = name(element);
+    const text = element.textContent.trim();
+    const action = /^(follow|following|unfollow|följ|följer|sluta följa)$/i;
+    const matches = element.matches(controls) ? labels.follow.test(label) : action.test(text) || action.test(label);
+    return matches && element.getClientRects().length;
+  });
+}
+
 export function reelControl(reel, action) {
   const navigation = action === 'previous' || action === 'next';
   return findButton(navigation ? reel.card.closest('[role="main"],main') ?? document : reel.card, action);
@@ -147,9 +159,9 @@ export function reelMetadata(reel) {
   let caption = { text: '', links: [] };
   let more;
   for (let element = heading; element && element !== reel.card; element = element.parentElement) {
-    follow ??= findButton(element, 'follow');
+    follow ??= findFollowControl(element);
     const next = element.nextElementSibling;
-    if (!next || next.matches(captionExcluded) || findButton(next, 'follow')) continue;
+    if (!next || next.matches(captionExcluded) || findFollowControl(next)) continue;
     caption = readCaption(next);
     if (!caption.text) continue;
     more = findButton(next, 'expand');
@@ -161,6 +173,7 @@ export function reelMetadata(reel) {
     profile: profile?.startsWith(`${location.origin}/`) ? profile : undefined,
     photo: photo?.currentSrc || photo?.getAttribute('src') || photo?.getAttribute('href') || photo?.getAttribute('xlink:href'),
     follow: follow?.textContent.trim() || (follow && name(follow)),
+    followControl: follow,
     caption,
     more,
   };

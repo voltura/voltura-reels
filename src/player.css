@@ -45,8 +45,9 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
 .creator-name[href]:hover,.caption-more:hover{text-decoration:underline}
 .creator-name span,.creator-follow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .creator-name img{border-radius:50%;object-fit:cover;flex:none}
-.creator-follow{flex:none;max-width:44%;font-size:12px;color:#e3e8ef}
-.creator-follow::before{content:"·";margin-inline-end:6px}
+.creator-follow{flex:none;max-width:44%;padding:3px 0;font-size:12px;color:#e3e8ef}
+.creator-follow::before{content:"·" / "";margin-inline-end:6px}
+.creator-follow:not(:disabled):hover{color:var(--theme-accent-hover);text-decoration:underline}
 .caption{
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
   overflow:hidden;white-space:pre-line;overflow-wrap:anywhere;font-size:12px;color:#f4f5f4;
@@ -132,6 +133,10 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
   padding:0;border-radius:50%;
 }
 .launch svg{width:45%;height:45%}
+.launch:is(:hover,:focus-visible){
+  background:var(--theme-raised);border-color:var(--theme-accent);color:var(--theme-accent-hover);
+}
+.launch:is(:hover,:focus-visible) svg{stroke-width:2.5}
 .tooltip{
   position:absolute;z-index:12;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
   display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;
