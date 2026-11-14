@@ -98,7 +98,8 @@ export class ReelPlayer {
     }
     this.launch.hidden = this.active;
     this.launch.style.left = `${clamp(reel.bounds.right - 50, 8, Math.max(8, innerWidth - 46))}px`;
-    this.launch.style.top = `${clamp(reel.bounds.top + 62, 8, Math.max(8, innerHeight - 46))}px`;
+    // Leave room for Facebook's search button and its tooltip.
+    this.launch.style.top = `${clamp(reel.bounds.top + 116, 8, Math.max(8, innerHeight - 46))}px`;
     if (this.active) {
       this.render();
       this.applyZoom();

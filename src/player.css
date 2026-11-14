@@ -21,10 +21,16 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
 .overlay-button svg{width:16px;height:16px}
 .overlay-button.zoom{width:auto;padding:0 8px;font:450 12px system-ui,sans-serif;font-variant-numeric:tabular-nums}
 .social{position:absolute;right:14px;bottom:92px;display:grid;justify-items:center;z-index:4;gap:8px}
-.social button{display:grid;place-items:center;min-width:40px;min-height:36px;padding:6px 8px;border-radius:20px;background:var(--theme-surface);color:var(--theme-on-surface)}
-.social button:has(.count){padding-block:7px}
+.social button{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:46px;height:46px;padding:0 3px;border-radius:50%;
+  background:var(--theme-surface);color:var(--theme-on-surface);
+}
 .social button:hover,.social button[aria-pressed="true"]{background:var(--theme-active);color:var(--theme-accent)}
-.social .count{margin-top:3px;font-size:10px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
+.social .count{
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:10px;line-height:1.15;font-variant-numeric:tabular-nums;
+}
 .social .tooltip{bottom:50%;left:auto;right:calc(100% + 7px);transform:translateY(50%)}
 .social button[aria-pressed="true"] svg{fill:color-mix(in srgb,var(--theme-accent) 20%,transparent)}
 .creator{display:flex;align-items:center;gap:8px;position:absolute;bottom:85px;left:13px;right:11px;z-index:3;color:#fff;pointer-events:none}
