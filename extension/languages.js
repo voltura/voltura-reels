@@ -38,6 +38,8 @@ export function translator(locale) {
 
 const messages = {
   "sv": {
+    "See more": "Visa mer",
+    "See less": "Visa mindre",
     "Repeat selected segment": "Upprepa valt avsnitt",
     "Repeat whole reel": "Upprepa hela reelen",
     "Control bar width": "Kontrollfältets bredd",
@@ -100,6 +102,8 @@ const messages = {
     "Frame capture unavailable": "Det går inte att spara bildrutan"
   },
   "da": {
+    "See more": "Se mere",
+    "See less": "Se mindre",
     "Repeat selected segment": "Gentag valgt afsnit",
     "Repeat whole reel": "Gentag hele reelen",
     "Control bar width": "Kontrolbjælkens bredde",
@@ -162,6 +166,8 @@ const messages = {
     "Frame capture unavailable": "Billedet kunne ikke gemmes"
   },
   "de": {
+    "See more": "Mehr anzeigen",
+    "See less": "Weniger anzeigen",
     "Repeat selected segment": "Ausgewählten Abschnitt wiederholen",
     "Repeat whole reel": "Ganzes Reel wiederholen",
     "Control bar width": "Breite der Steuerleiste",
@@ -224,6 +230,8 @@ const messages = {
     "Frame capture unavailable": "Standbild konnte nicht gespeichert werden"
   },
   "es": {
+    "See more": "Ver más",
+    "See less": "Ver menos",
     "Repeat selected segment": "Repetir el segmento seleccionado",
     "Repeat whole reel": "Repetir todo el reel",
     "Control bar width": "Ancho de la barra de controles",
@@ -286,6 +294,8 @@ const messages = {
     "Frame capture unavailable": "No se pudo guardar el fotograma"
   },
   "fr": {
+    "See more": "Voir plus",
+    "See less": "Voir moins",
     "Repeat selected segment": "Répéter le segment sélectionné",
     "Repeat whole reel": "Répéter le reel entier",
     "Control bar width": "Largeur de la barre de lecture",
@@ -348,6 +358,8 @@ const messages = {
     "Frame capture unavailable": "Impossible d’enregistrer l’image"
   },
   "it": {
+    "See more": "Mostra altro",
+    "See less": "Mostra meno",
     "Repeat selected segment": "Ripeti il segmento selezionato",
     "Repeat whole reel": "Ripeti tutto il reel",
     "Control bar width": "Larghezza della barra dei controlli",
@@ -410,6 +422,8 @@ const messages = {
     "Frame capture unavailable": "Impossibile salvare il fotogramma"
   },
   "ja": {
+    "See more": "もっと見る",
+    "See less": "表示を減らす",
     "Repeat selected segment": "選択した区間をリピート",
     "Repeat whole reel": "リール全体をリピート",
     "Control bar width": "操作バーの幅",
@@ -472,6 +486,8 @@ const messages = {
     "Frame capture unavailable": "フレームを保存できません"
   },
   "nl": {
+    "See more": "Meer weergeven",
+    "See less": "Minder weergeven",
     "Repeat selected segment": "Geselecteerd fragment herhalen",
     "Repeat whole reel": "Hele reel herhalen",
     "Control bar width": "Breedte bedieningsbalk",
@@ -534,6 +550,8 @@ const messages = {
     "Frame capture unavailable": "Beeld kan niet worden opgeslagen"
   },
   "nb": {
+    "See more": "Se mer",
+    "See less": "Se mindre",
     "Repeat selected segment": "Gjenta valgt segment",
     "Repeat whole reel": "Gjenta hele reelen",
     "Control bar width": "Bredde på kontrollinjen",
@@ -596,6 +614,8 @@ const messages = {
     "Frame capture unavailable": "Bildet kunne ikke lagres"
   },
   "pl": {
+    "See more": "Zobacz więcej",
+    "See less": "Zobacz mniej",
     "Repeat selected segment": "Powtarzaj wybrany fragment",
     "Repeat whole reel": "Powtarzaj całą rolkę",
     "Control bar width": "Szerokość paska sterowania",
@@ -658,6 +678,8 @@ const messages = {
     "Frame capture unavailable": "Nie można zapisać klatki"
   },
   "fi": {
+    "See more": "Näytä lisää",
+    "See less": "Näytä vähemmän",
     "Repeat selected segment": "Toista valittu jakso",
     "Repeat whole reel": "Toista koko kela",
     "Control bar width": "Ohjauspalkin leveys",
@@ -720,6 +742,8 @@ const messages = {
     "Frame capture unavailable": "Ruutua ei voitu tallentaa"
   },
   "pt-BR": {
+    "See more": "Ver mais",
+    "See less": "Ver menos",
     "Repeat selected segment": "Repetir trecho selecionado",
     "Repeat whole reel": "Repetir o reel inteiro",
     "Control bar width": "Largura da barra de controles",
@@ -782,6 +806,8 @@ const messages = {
     "Frame capture unavailable": "Não foi possível salvar o quadro"
   },
   "pt-PT": {
+    "See more": "Ver mais",
+    "See less": "Ver menos",
     "Repeat selected segment": "Repetir segmento selecionado",
     "Repeat whole reel": "Repetir o reel inteiro",
     "Control bar width": "Largura da barra de controlos",
@@ -844,6 +870,8 @@ const messages = {
     "Frame capture unavailable": "Não foi possível guardar o fotograma"
   },
   "is": {
+    "See more": "Sjá meira",
+    "See less": "Sjá minna",
     "Repeat selected segment": "Endurtaka valinn kafla",
     "Repeat whole reel": "Endurtaka allt myndbandið",
     "Control bar width": "Breidd stjórnstiku",
@@ -906,6 +934,8 @@ const messages = {
     "Frame capture unavailable": "Ekki tókst að vista ramma"
   },
   "zh-TW": {
+    "See more": "顯示更多",
+    "See less": "顯示較少",
     "Repeat selected segment": "循環播放所選片段",
     "Repeat whole reel": "循環播放整部短片",
     "Control bar width": "控制列寬度",

@@ -33,9 +33,25 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
 }
 .social .tooltip{bottom:50%;left:auto;right:calc(100% + 7px);transform:translateY(50%)}
 .social button[aria-pressed="true"] svg{fill:color-mix(in srgb,var(--theme-accent) 20%,transparent)}
-.creator{display:flex;align-items:center;gap:8px;position:absolute;bottom:85px;left:13px;right:11px;z-index:3;color:#fff;pointer-events:none}
-.creator-name{font-size:12px;font-weight:670;margin-bottom:2px}
-.caption{font-size:11px;color:#f4f5f4}
+.creator{
+  position:absolute;bottom:85px;left:max(16px,calc((100% - 900px) / 2));z-index:3;
+  max-width:min(calc(100% - 88px),740px);padding:9px 12px;
+  border-radius:8px;background:#080b12df;color:#fff;
+}
+.creator-header,.creator-name{display:flex;align-items:center;gap:7px;min-width:0}
+.creator-name{color:inherit;font-weight:650;text-decoration:none}
+.creator-name[href]:hover,.caption-more:hover{text-decoration:underline}
+.creator-name span,.creator-follow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.creator-name img{border-radius:50%;object-fit:cover;flex:none}
+.creator-follow{flex:none;max-width:44%;font-size:12px;color:#e3e8ef}
+.creator-follow::before{content:"·";margin-inline-end:6px}
+.caption{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  overflow:hidden;white-space:pre-line;overflow-wrap:anywhere;font-size:12px;color:#f4f5f4;
+}
+.creator-header:not([hidden]) + .caption:not(:empty){margin-top:5px}
+.creator.expanded .caption{display:block;overflow:auto;max-height:36vh;scrollbar-color:#c6cdd8 #080b12}
+.caption-more{padding:3px 0 0;color:inherit;font-size:12px;font-weight:650;text-align:start}
 .dock{
   position:absolute;z-index:5;bottom:9px;width:calc(100% - 24px);max-width:920px;container-type:inline-size;
   padding:6px 9px 7px;border:1px solid var(--theme-border);border-radius:10px;
@@ -151,8 +167,3 @@ svg { width: 18px; height: 18px; vertical-align: middle; }
   .social{bottom:124px}
   .creator{bottom:112px}
 }
-.creator { display: block; right: auto; left: max(16px, calc((100% - 900px) / 2)); max-width: min(80vw, 740px); padding: 8px 12px; border-radius: 8px; background: #080b12b8; pointer-events: auto; }
-.creator a { color: inherit; text-decoration: none; display: inline-block; margin-bottom: 3px; }
-.creator a:hover { text-decoration: underline; }
-.caption { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; white-space: pre-line; }
-.creator:hover .caption, .creator:focus-within .caption { overflow: auto; max-height: 36vh; -webkit-line-clamp: unset; }

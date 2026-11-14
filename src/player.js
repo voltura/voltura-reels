@@ -5,7 +5,7 @@ import { defaultTheme, formatPlaybackRate, playbackRates, playerSetting, playerS
 import { languageKey, resolveLanguage, translator } from '../extension/languages.js';
 import { paintIcon } from './icons.js';
 import { clamp, panBounds, seekTarget, tenth, timeText } from './media.js';
-import { isEnabled, nativeAction, reelControl, reelMetadata } from './facebook.js';
+import { isEnabled, nativeAction, reelControl, reelMetadata, reelMuteControl, setReelVolume } from './facebook.js';
 
 const fullscreenAttribute = 'data-voltura-reel-fullscreen';
 const videoAttribute = 'data-voltura-reel-video';
@@ -107,6 +107,7 @@ export class ReelPlayer {
       this.reel = reel;
       this.requestedTime = undefined;
       this.showTenths = false;
+      if (!sameReel) this.captionExpanded = this.captionWasExpanded = false;
       if (!sameReel || !this.commentsState) this.loop = undefined;
       if (!sameReel) this.repeatEnabled = false;
       this.gesture = undefined;
@@ -180,7 +181,21 @@ export class ReelPlayer {
   }
 
   applyAudioPreference() {
-    if (this.muted !== undefined && this.video.muted !== this.muted) this.video.muted = this.muted;
+    if (this.fallbackMuted !== undefined && this.video.muted !== this.fallbackMuted) {
+      this.video.muted = this.fallbackMuted;
+    }
+  }
+
+  setMuted(muted) {
+    const native = reelMuteControl(this.reel);
+    if (native) {
+      // Facebook keeps its own mute preference and uses it when playback resumes.
+      this.fallbackMuted = undefined;
+      if (native.muted !== muted) native.button.click();
+      return;
+    }
+    this.fallbackMuted = muted;
+    this.applyAudioPreference();
   }
 
   pinVideo() {
@@ -210,6 +225,10 @@ export class ReelPlayer {
 
   enter() {
     if (this.active || !this.video?.isConnected || document.fullscreenElement) return;
+    const fullscreen = this.documentRoot.requestFullscreen({ navigationUI: 'hide' });
+    this.fallbackMuted = undefined;
+    this.volume = undefined;
+    this.requestedTime = undefined;
     this.active = true;
     this.documentRoot.setAttribute(fullscreenAttribute, '');
     this.launch.hidden = true;
@@ -231,13 +250,11 @@ export class ReelPlayer {
     this.render();
     this.reveal();
     this.viewport.focus({ preventScroll: true });
-    try {
-      this.documentRoot.requestFullscreen().then(() => {
-        if (!this.active && document.fullscreenElement === this.documentRoot) void document.exitFullscreen();
-      }).catch(() => {});
-    } catch {
-      // The fixed player is the fallback when browser fullscreen is unavailable.
-    }
+    fullscreen.then(() => {
+      if (!this.active && document.fullscreenElement === this.documentRoot) void document.exitFullscreen();
+    }).catch(() => {
+      if (this.active) void this.leave();
+    });
     this.frame = requestAnimationFrame(() => this.tick());
   }
 
@@ -643,12 +660,30 @@ export class ReelPlayer {
     overlay.setAttribute('aria-pressed', String(this.hiddenOverlay));
     this.layout.classList.toggle('social-hidden', this.hiddenOverlay);
     this.get('social').hidden = this.hiddenOverlay;
-    const { owner, profile, caption } = reelMetadata(this.reel);
+    const { owner, profile, photo, follow, caption, more } = reelMetadata(this.reel);
+    this.captionSource = more;
     this.get('creator').hidden = this.hiddenOverlay || !(owner || caption);
-    if (this.get('owner').textContent !== owner) this.get('owner').textContent = owner;
+    this.get('owner').parentElement.hidden = !owner;
+    if (this.get('creator-name').textContent !== owner) this.get('creator-name').textContent = owner;
     if (profile && this.get('owner').getAttribute('href') !== profile) this.get('owner').href = profile;
     else if (!profile) this.get('owner').removeAttribute('href');
+    const avatar = this.get('creator-photo');
+    avatar.hidden = !photo || !owner;
+    if (photo && avatar.getAttribute('src') !== photo) avatar.src = photo;
+    else if (!photo) avatar.removeAttribute('src');
+    const followState = this.get('creator-follow');
+    followState.hidden = !follow;
+    if (followState.textContent !== (follow ?? '')) followState.textContent = follow ?? '';
     if (this.get('caption').textContent !== caption) this.get('caption').textContent = caption;
+    const expanded = Boolean(this.captionExpanded);
+    this.get('creator').classList.toggle('expanded', expanded);
+    const disclosure = this.get('caption-more');
+    const captionBox = this.get('caption');
+    const canExpand = Boolean(more) || captionBox.scrollHeight > captionBox.clientHeight;
+    disclosure.hidden = !caption || !(canExpand || expanded || this.captionWasExpanded);
+    disclosure.setAttribute('aria-expanded', String(expanded));
+    const disclosureText = this.translate(expanded ? 'See less' : 'See more');
+    if (disclosure.textContent !== disclosureText) disclosure.textContent = disclosureText;
     for (const action of ['like', 'comments', 'share', 'save', 'more']) {
       const native = reelControl(this.reel, action === 'save' ? 'more' : action);
       const button = this.get(action);
@@ -710,6 +745,9 @@ export class ReelPlayer {
     const open = this.get(id).hidden;
     this.closePopovers();
     this.setMenu(id, trigger, open);
+    if (open && id === 'volume-popover') {
+      reelMuteControl(this.reel)?.button.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    }
     if (open) this.get(id).querySelector('[aria-pressed="true"],input')?.focus();
     this.reveal();
   }
@@ -750,10 +788,16 @@ export class ReelPlayer {
     click('save', () => void this.saveOnFacebook());
     for (const action of ['comments', 'share', 'more']) click(action, () => void this.openFacebookAction(action));
     click('cc', () => this.setCaptions());
+    click('caption-more', () => {
+      this.captionExpanded = !this.captionExpanded;
+      this.captionWasExpanded ||= this.captionExpanded;
+      if (this.captionExpanded && this.captionSource) this.captionSource.click();
+      this.renderOverlay();
+    });
     click('mute', () => {
-      this.muted = !this.video.muted;
-      if (!this.muted && !this.video.volume) this.video.volume = this.volume = 0.5;
-      this.applyAudioPreference();
+      const muted = !this.video.muted && this.video.volume > 0;
+      if (!muted && !this.video.volume) this.video.volume = this.volume = this.audibleVolume ?? 0.5;
+      this.setMuted(muted);
     });
     click('rate', () => this.toggleMenu('rates', 'rate'));
     click('volume-button', () => this.toggleMenu('volume-popover', 'volume-button'));
@@ -777,9 +821,14 @@ export class ReelPlayer {
       this.get('rates').append(option);
     }
     this.on(this.get('volume'), 'input', event => {
+      if (this.video.volume > 0) this.audibleVolume = this.video.volume;
       this.volume = Number(event.target.value) / 100;
       this.video.volume = this.volume;
-      if (this.volume && this.video.muted) this.video.muted = this.muted = false;
+      if (!this.volume || this.video.muted || this.fallbackMuted) this.setMuted(!this.volume);
+    });
+    this.on(this.get('volume'), 'change', () => {
+      // Facebook's slider updates its own preference as well as the media element.
+      if (this.volume > 0) setReelVolume(this.reel, this.volume);
     });
     this.on(this.stage, 'pointerdown', event => {
       if (!event.target.closest('.popover-wrap')) this.closePopovers();
