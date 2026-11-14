@@ -3,7 +3,7 @@ const icons = {
   dock:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 14h18M7 17h2m3 0h5"/>',
   spark:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M6 16h2m3 0h2m3 0h2"/>',
   marks:'<path d="M3 13h18M7 6v12M17 6v12m-7-8 2 3-2 3"/>',
-  handles:'<path d="M2 12h20"/><rect x="5" y="6" width="4" height="12" rx="1" fill="white"/><rect x="15" y="6" width="4" height="12" rx="1" fill="white"/>',
+  handles:'<path d="M3 12h3m4 0h4m4 0h3"/><rect x="6" y="6" width="4" height="12" rx="1"/><rect x="14" y="6" width="4" height="12" rx="1"/>',
   landscape:'<rect x="2.5" y="5.5" width="19" height="13" rx="2"/>',
   portrait:'<rect x="6" y="2.5" width="12" height="19" rx="2"/>',
   eye:'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/>',

@@ -29,7 +29,7 @@ const observer = new MutationObserver(records => {
 });
 observer.observe(document.documentElement, {
   subtree: true, childList: true, attributes: true,
-  attributeFilter: ['src', 'aria-disabled', 'aria-pressed', 'aria-label'],
+  attributeFilter: ['src', 'loop', 'aria-disabled', 'aria-pressed', 'aria-label'],
 });
 navigation.addEventListener('currententrychange', schedule);
 window.addEventListener('resize', schedule);

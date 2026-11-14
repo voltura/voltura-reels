@@ -31,6 +31,8 @@
         <div class="indicator"></div>
         <div class="handle" id="loop-start" role="slider" tabindex="0" aria-label="Loop start" hidden></div>
         <div class="handle" id="loop-end" role="slider" tabindex="0" aria-label="Loop end" hidden></div>
+        <span class="loop-marker" id="marker-start" aria-hidden="true" hidden>A</span>
+        <span class="loop-marker" id="marker-end" aria-hidden="true" hidden>B</span>
         <div class="hover-time" hidden></div>
       </div>
       <div class="dock-row">
@@ -45,9 +47,14 @@
           <output class="timecode" aria-live="off"><span id="elapsed"></span><span id="duration" class="total"></span></output>
         </div>
         <div class="loop-controls">
-          <button id="repeat" class="dock-button" data-icon="repeat" aria-label="Select a range" data-keys="L|Shift+drag" aria-pressed="false"></button>
+          <button id="select-range" class="dock-button" data-icon="handles" aria-label="Select a range" data-keys="Shift+drag"></button>
+          <div id="loop-marks" class="loop-marks" hidden>
+            <button id="mark-start" class="text-button mark" aria-label="Set start at playhead" aria-keyshortcuts="[" data-keys="[" aria-pressed="false">A</button>
+            <button id="mark-end" class="text-button mark" aria-label="Set end at playhead" aria-keyshortcuts="]" data-keys="]" aria-pressed="false">B</button>
+          </div>
           <span class="loop-readout" hidden></span>
           <button id="clear" class="dock-button clear" data-icon="x" aria-label="Clear loop" data-keys="Shift+L" hidden></button>
+          <button id="repeat" class="dock-button" data-icon="repeat" aria-label="Repeat whole reel" aria-keyshortcuts="L" data-keys="L" aria-pressed="false"></button>
         </div>
         <div class="extras">
           <div class="popover-wrap">

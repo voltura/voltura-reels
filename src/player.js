@@ -1,7 +1,7 @@
 import markup from './player.html';
 import css from './player.css';
 import themes from '../extension/themes.css';
-import { defaultTheme, formatPlaybackRate, playbackRates, themeKey, validTheme } from '../extension/preferences.js';
+import { defaultTheme, formatPlaybackRate, playbackRates, playerSetting, playerSettings, themeKey, validTheme } from '../extension/preferences.js';
 import { languageKey, resolveLanguage, translator } from '../extension/languages.js';
 import { paintIcon } from './icons.js';
 import { clamp, panBounds, seekTarget, tenth, timeText } from './media.js';
@@ -12,6 +12,7 @@ const videoAttribute = 'data-voltura-reel-video';
 const pathAttribute = 'data-voltura-reel-path';
 const panKeys = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
 const themeStyles = themes.replace(/:root(\[data-skin="[^"]+"\])/g, ':host($1)');
+const playbackKeys = Object.keys(playerSettings);
 
 export class ReelPlayer {
   constructor(schedule) {
@@ -29,6 +30,8 @@ export class ReelPlayer {
     this.launch = this.ui.querySelector('.launch');
     this.viewport = this.ui.querySelector('.viewport');
     this.dock = this.ui.querySelector('.dock');
+    this.dock.dataset.width = playerSetting('dockWidth');
+    this.loopStyle = playerSetting('loopStyle');
     this.scrubber = this.ui.querySelector('.scrubber');
     this.timeline = this.get('timeline');
     this.listeners = new AbortController();
@@ -41,9 +44,10 @@ export class ReelPlayer {
     this.connect();
     this.documentRoot.append(this.host);
     this.setLanguage();
-    chrome.storage.local.get([themeKey, languageKey]).then(values => {
+    chrome.storage.local.get([themeKey, languageKey, ...playbackKeys]).then(values => {
       this.setTheme(values[themeKey]);
       this.setLanguage(values[languageKey]);
+      for (const key of playbackKeys) this.setPlayerSetting(key, values[key]);
     }).catch(() => {});
   }
 
@@ -57,6 +61,25 @@ export class ReelPlayer {
   }
 
   setTheme(theme) { this.host.dataset.skin = validTheme(theme); }
+
+  setPlayerSetting(key, value) {
+    const setting = playerSetting(key, value);
+    if (key === 'dockWidth') this.dock.dataset.width = setting;
+    if (key === 'controlsVisibility') {
+      this.controlsVisibility = setting;
+      this.reveal();
+    }
+    if (key === 'loopStyle' && setting !== this.loopStyle) {
+      const focus = this.ui.activeElement;
+      this.loopStyle = setting;
+      this.gesture = undefined;
+      if (this.loop && !this.hasLoop && setting === 'handles') this.loop = undefined;
+      if (this.active) {
+        this.renderLoop();
+        if (focus?.closest('[hidden]')) this.get(setting === 'marks' ? 'mark-start' : 'select-range').focus();
+      }
+    }
+  }
 
   setLanguage(preference) {
     this.host.lang = resolveLanguage(preference);
@@ -85,6 +108,7 @@ export class ReelPlayer {
       this.requestedTime = undefined;
       this.showTenths = false;
       if (!sameReel || !this.commentsState) this.loop = undefined;
+      if (!sameReel) this.repeatEnabled = false;
       this.gesture = undefined;
       this.rangeDrag = undefined;
       this.pan = undefined;
@@ -101,6 +125,7 @@ export class ReelPlayer {
     // Leave room for Facebook's search button and its tooltip.
     this.launch.style.top = `${clamp(reel.bounds.top + 116, 8, Math.max(8, innerHeight - 46))}px`;
     if (this.active) {
+      this.applyNativeRepeat();
       this.render();
       this.applyZoom();
     }
@@ -134,10 +159,11 @@ export class ReelPlayer {
     }, { signal });
     video.addEventListener('timeupdate', () => this.enforceLoop(), { signal });
     video.addEventListener('ended', () => {
-      if (this.active && this.loop?.enabled) {
-        this.seek(this.loop.start);
+      if (!this.active) return;
+      if (this.repeatEnabled) {
+        this.seek(this.hasLoop ? this.loop.start : 0);
         void video.play().catch(() => {});
-      } else if (this.active) {
+      } else {
         this.render();
         this.reveal();
       }
@@ -164,6 +190,8 @@ export class ReelPlayer {
       this.path.push(element);
     }
     this.video.setAttribute(videoAttribute, '');
+    this.nativeRepeat = this.video.loop;
+    this.applyNativeRepeat();
     this.applyMediaPreferences();
     this.applyZoom();
   }
@@ -172,6 +200,10 @@ export class ReelPlayer {
     for (const element of this.path) element.removeAttribute(pathAttribute);
     this.path = [];
     if (!this.video) return;
+    if (this.nativeRepeat !== undefined) {
+      this.video.loop = this.nativeRepeat;
+      this.nativeRepeat = undefined;
+    }
     this.video.removeAttribute(videoAttribute);
     for (const name of ['--voltura-zoom', '--voltura-pan-x', '--voltura-pan-y']) this.video.style.removeProperty(name);
   }
@@ -250,6 +282,7 @@ export class ReelPlayer {
     clearTimeout(this.revealTimer);
     this.dock.classList.remove('faded');
     this.layout.classList.remove('overlay-toggle-faded');
+    if (this.controlsVisibility === 'always') return;
     this.revealTimer = setTimeout(() => {
       const menuOpen = !this.get('rates').hidden || !this.get('volume-popover').hidden;
       const keyboardFocus = this.ui.activeElement !== this.viewport && this.ui.activeElement?.matches(':focus-visible');
@@ -271,9 +304,9 @@ export class ReelPlayer {
   enforceLoop() {
     const video = this.video;
     const loop = this.loop;
-    if (!this.active || !video || video.paused || video.seeking || !loop?.enabled ||
+    if (!this.active || !video || video.paused || video.seeking || !this.repeatEnabled || !this.hasLoop ||
         this.gesture || this.rangeDrag || this.scrubbing) return;
-    if (video.currentTime >= loop.end) this.seek(loop.start);
+    if (video.currentTime < loop.start - 0.025 || video.currentTime >= loop.end) this.seek(loop.start);
   }
 
   seek(time, direction = 0) {
@@ -288,7 +321,7 @@ export class ReelPlayer {
   }
 
   resumeInsideLoop() {
-    if (this.loop?.enabled && (this.position < this.loop.start || this.position >= this.loop.end)) {
+    if (this.repeatEnabled && this.hasLoop && (this.position < this.loop.start || this.position >= this.loop.end)) {
       this.seek(this.loop.start);
     }
   }
@@ -296,7 +329,7 @@ export class ReelPlayer {
   step(amount) {
     this.showTenths = this.video.paused && Math.abs(amount) < 5;
     const target = this.position + amount;
-    if (this.loop?.enabled && (target < this.loop.start || target >= this.loop.end)) {
+    if (this.repeatEnabled && this.hasLoop && (target < this.loop.start || target >= this.loop.end)) {
       this.seek(amount > 0 ? this.loop.start : Math.max(this.loop.start, this.loop.end - 0.1));
     } else this.seek(target, Math.sign(amount));
   }
@@ -333,16 +366,45 @@ export class ReelPlayer {
   }
 
   selectLoop() {
-    if (!this.duration || !this.video.seekable.length) return;
-    if (!this.loop) {
-      const length = Math.min(this.duration, Math.max(4, this.duration * 0.08));
-      const start = clamp(tenth(this.position), 0, this.duration - length);
-      this.loop = { start, end: start + length, enabled: true };
-    } else {
-      this.loop.enabled = !this.loop.enabled;
-    }
+    if (this.timeline.disabled) return;
+    const length = Math.min(this.duration, Math.max(4, this.duration * 0.08));
+    const start = clamp(tenth(this.position), 0, this.duration - length);
+    this.loop = { start, end: start + length };
+    this.updateRepeat();
+  }
+
+  applyNativeRepeat() {
+    if (this.nativeRepeat === undefined) return;
+    const loopWholeReel = this.repeatEnabled && !this.hasLoop;
+    if (this.video.loop !== loopWholeReel) this.video.loop = loopWholeReel;
+  }
+
+  toggleRepeat() {
+    if (this.get('repeat').disabled) return;
+    this.repeatEnabled = !this.repeatEnabled;
+    this.updateRepeat();
+  }
+
+  updateRepeat() {
+    this.applyNativeRepeat();
     if (!this.video.paused) this.resumeInsideLoop();
     this.renderLoop();
+  }
+
+  get hasLoop() { return this.loop?.start != null && this.loop?.end != null; }
+
+  setLoopMark(edge) {
+    if (this.loopStyle !== 'marks' || this.timeline.disabled) return;
+    const time = clamp(tenth(this.position), 0, this.duration);
+    const start = edge === 'start' ? time : this.loop?.start;
+    const end = edge === 'end' ? time : this.loop?.end;
+    const complete = start !== undefined && end !== undefined;
+    if (complete && tenth(end - start) < 0.2) {
+      this.announce('Keep A at least 0.2 seconds before B');
+      return;
+    }
+    this.loop = { start, end };
+    this.updateRepeat();
   }
 
   moveHandle(edge, time) {
@@ -352,17 +414,15 @@ export class ReelPlayer {
     const position = clamp(tenth(time), min, max);
     if (position === this.loop[edge]) return;
     this.loop[edge] = position;
-    this.loop.enabled = true;
-    if (!this.video.paused) this.resumeInsideLoop();
-    this.renderLoop();
+    this.updateRepeat();
   }
 
   clearLoop() {
     const focusWasHidden = this.ui.activeElement === this.get('clear') ||
       this.ui.activeElement?.classList.contains('handle');
     this.loop = undefined;
-    this.renderLoop();
-    if (focusWasHidden) this.get('repeat').focus();
+    this.updateRepeat();
+    if (focusWasHidden) this.get(this.loopStyle === 'marks' ? 'mark-start' : 'select-range').focus();
   }
 
   clearNavigation() {
@@ -497,16 +557,31 @@ export class ReelPlayer {
   renderLoop() {
     const { loop, duration } = this;
     const exists = Boolean(loop && duration);
+    const complete = Boolean(duration && this.hasLoop);
+    const marks = this.loopStyle === 'marks';
     const band = this.ui.querySelector('.loop-band');
     const readout = this.ui.querySelector('.loop-readout');
     const repeat = this.get('repeat');
-    repeat.setAttribute('aria-pressed', String(Boolean(loop?.enabled)));
-    this.label(repeat, loop?.enabled ? 'Turn repeat off' : exists ? 'Turn repeat on' : 'Select a range');
-    for (const element of [band, readout, this.get('clear')]) element.hidden = !exists;
+    const selectRange = this.get('select-range');
+    this.get('loop-marks').hidden = !marks;
+    selectRange.hidden = marks;
+    selectRange.disabled = this.timeline.disabled;
+    repeat.disabled = !duration;
+    repeat.setAttribute('aria-pressed', String(Boolean(this.repeatEnabled)));
+    this.label(repeat, complete ? 'Repeat selected segment' : 'Repeat whole reel');
+    band.hidden = !complete;
+    readout.hidden = this.get('clear').hidden = !exists;
     for (const edge of ['start', 'end']) {
       const handle = this.get(`loop-${edge}`);
-      handle.hidden = !exists;
-      if (!exists) continue;
+      const marker = this.get(`marker-${edge}`);
+      const button = this.get(`mark-${edge}`);
+      const time = exists ? loop[edge] : undefined;
+      marker.hidden = !marks || time === undefined;
+      if (!marker.hidden) marker.style.left = `${time / duration * 100}%`;
+      button.disabled = this.timeline.disabled;
+      button.setAttribute('aria-pressed', String(time !== undefined));
+      handle.hidden = marks || !complete;
+      if (handle.hidden) continue;
       handle.style.left = `${loop[edge] / duration * 100}%`;
       handle.setAttribute('aria-valuenow', loop[edge]);
       handle.setAttribute('aria-valuemin', edge === 'start' ? 0 : Math.min(duration, loop.start + 0.2));
@@ -514,23 +589,29 @@ export class ReelPlayer {
       handle.setAttribute('aria-valuetext', timeText(loop[edge]));
     }
     if (!exists) return;
-    band.style.left = `${loop.start / duration * 100}%`;
-    band.style.width = `${(loop.end - loop.start) / duration * 100}%`;
-    band.classList.toggle('active', loop.enabled);
-    readout.classList.toggle('active', loop.enabled);
-    const text = `${timeText(loop.start)}–${timeText(loop.end)}`;
+    if (complete) {
+      band.style.left = `${loop.start / duration * 100}%`;
+      band.style.width = `${(loop.end - loop.start) / duration * 100}%`;
+    }
+    band.classList.toggle('active', this.repeatEnabled);
+    readout.classList.toggle('active', complete && this.repeatEnabled);
+    const start = loop.start === undefined ? '–' : timeText(loop.start);
+    const end = loop.end === undefined ? '–' : timeText(loop.end);
+    const text = `${start}–${end}`;
     if (readout.textContent !== text) readout.textContent = text;
   }
 
   render() {
     const video = this.video;
     this.renderNavigation();
+    const expansion = clamp((this.duration - 60) / 240, 0, 1);
+    this.dock.style.setProperty('--dock-expansion', expansion);
     this.renderTime();
-    this.renderLoop();
     const seekable = Boolean(this.duration && video.seekable.length && video.seekable.end(video.seekable.length - 1) > video.seekable.start(0));
-    for (const element of [this.timeline, this.get('back'), this.get('forward'), this.get('repeat')]) {
+    for (const element of [this.timeline, this.get('back'), this.get('forward')]) {
       if (element.disabled === seekable) element.disabled = !seekable;
     }
+    this.renderLoop();
     this.get('frame').hidden = !video.paused;
     this.get('frame').disabled = video.seeking || video.readyState < 2 || Boolean(video.mediaKeys);
     const play = this.get('play');
@@ -606,6 +687,7 @@ export class ReelPlayer {
       for (const keycap of element.dataset.keys?.split('|') ?? []) {
         const key = document.createElement('kbd');
         key.textContent = keycap;
+        if (keycap === '+') key.className = 'plus-key';
         tooltip.append(key);
       }
       element.append(tooltip);
@@ -652,8 +734,10 @@ export class ReelPlayer {
     click('exit-dock', () => void this.leave());
     click('play', () => this.togglePlay());
     click('frame', () => void this.capture());
-    click('repeat', () => this.selectLoop());
+    click('select-range', () => this.selectLoop());
+    click('repeat', () => this.toggleRepeat());
     click('clear', () => this.clearLoop());
+    for (const edge of ['start', 'end']) click(`mark-${edge}`, () => this.setLoopMark(edge));
     click('overlay', () => {
       this.hiddenOverlay = !this.hiddenOverlay;
       this.renderOverlay();
@@ -724,6 +808,9 @@ export class ReelPlayer {
       if (area !== 'local') return;
       if (Object.hasOwn(changes, themeKey)) this.setTheme(changes[themeKey].newValue);
       if (Object.hasOwn(changes, languageKey)) this.setLanguage(changes[languageKey].newValue);
+      for (const key of playbackKeys) {
+        if (Object.hasOwn(changes, key)) this.setPlayerSetting(key, changes[key].newValue);
+      }
     };
     chrome.storage.onChanged.addListener(onStorage);
     this.listeners.signal.addEventListener('abort', () => chrome.storage.onChanged.removeListener(onStorage), { once: true });
@@ -773,7 +860,7 @@ export class ReelPlayer {
         const start = Math.min(this.rangeDrag.anchor, time);
         const end = Math.max(this.rangeDrag.anchor, time);
         if (end - start >= 0.2) {
-          this.loop = { start: tenth(start), end: Math.min(this.duration, tenth(end)), enabled: true };
+          this.loop = { start: tenth(start), end: Math.min(this.duration, tenth(end)) };
           this.renderLoop();
         }
       }
@@ -788,11 +875,11 @@ export class ReelPlayer {
         const { original } = this.rangeDrag;
         this.rangeDrag = undefined;
         if (type !== 'pointerup') this.loop = original;
-        else if (this.loop && this.loop !== original) {
+        else if (this.repeatEnabled && this.loop && this.loop !== original) {
           this.showTenths = false;
           this.seek(this.loop.start);
         }
-        this.renderLoop();
+        this.updateRepeat();
         this.reveal();
       });
     }
@@ -876,7 +963,7 @@ export class ReelPlayer {
       v: () => this.get('volume-button').click(),
       c: () => this.setCaptions(),
       f: () => void this.leave(),
-      l: () => this.selectLoop(),
+      l: () => this.toggleRepeat(),
       pageup: () => this.navigate('previous'),
       pagedown: () => this.navigate('next'),
       arrowup: () => this.navigate('previous'),
@@ -909,6 +996,9 @@ export class ReelPlayer {
         } else {
           void this.leave();
         }
+      } else if ((!editable || focus === this.timeline) && !event.altKey && this.loopStyle === 'marks' &&
+          (key === '[' || key === ']')) {
+        if (!event.repeat) this.setLoopMark(key === '[' ? 'start' : 'end');
       } else if (focus?.matches('input,[role="slider"]')) {
         return;
       } else if (key === 'l' && event.shiftKey && !event.altKey) {

@@ -1,4 +1,4 @@
-import { defaultTheme, iconFilters, themeKey, themeNames, validTheme } from './preferences.js';
+import { defaultTheme, iconFilters, playerSetting, playerSettings, themeKey, themeNames, validTheme } from './preferences.js';
 import { languageKey, languages, resolveLanguage, translator } from './languages.js';
 
 const select = document.querySelector('#theme');
@@ -104,10 +104,42 @@ function showTheme(theme) {
 }
 
 let savedTheme = defaultTheme;
+const playbackKeys = Object.keys(playerSettings);
+const savedPlayback = {};
+for (const [key, choices] of Object.entries(playerSettings)) {
+  const field = document.getElementById(key);
+  for (const [value, label] of Object.entries(choices)) {
+    const option = new Option(label, value);
+    option.dataset.message = label;
+    field.add(option);
+  }
+  savedPlayback[key] = field.value = playerSetting(key);
+  field.addEventListener('change', async () => {
+    const value = field.value;
+    field.disabled = true;
+    setStatus();
+    try {
+      await chrome.storage.local.set({ [key]: value });
+      savedPlayback[key] = value;
+    } catch {
+      field.value = savedPlayback[key];
+      setStatus('Could not save settings');
+    } finally {
+      field.disabled = false;
+      field.focus();
+    }
+  });
+}
+
 try {
-  const stored = await chrome.storage.local.get([themeKey, languageKey]);
+  const stored = await chrome.storage.local.get([themeKey, languageKey, ...playbackKeys]);
   savedTheme = validTheme(stored[themeKey]);
   language = languages.some(item => item.code === stored[languageKey]) ? stored[languageKey] : 'auto';
+  for (const key of playbackKeys) {
+    const field = document.getElementById(key);
+    savedPlayback[key] = field.value = playerSetting(key, stored[key]);
+    field.disabled = false;
+  }
   select.disabled = false;
   trigger.disabled = false;
 } catch {

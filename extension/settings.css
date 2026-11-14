@@ -9,7 +9,8 @@ body { width: 280px; margin: 0; }
 header { display: flex; gap: 10px; align-items: center; padding: 16px; }
 h1 { margin: 0; font-size: 15px; font-weight: 650; }
 main { display: grid; gap: 8px; padding: 4px 16px 18px; }
-label { font-weight: 600; }
+label, #language-label { font-weight: 600; }
+main > label:not(:first-child), #language-label { margin-top: 4px; }
 select, #language-trigger {
   width: 100%;
   background: var(--theme-raised);
@@ -19,7 +20,6 @@ select, #language-trigger {
   font: inherit;
   padding: 8px;
 }
-#language-label { margin-top: 4px; font-weight: 600; }
 #language-trigger, #language-options button { display: flex; align-items: center; gap: 10px; text-align: start; }
 #language-trigger span:last-child { margin-inline-start: auto; }
 #language-trigger img, #language-options img { flex: none; object-fit: cover; }
