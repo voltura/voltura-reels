@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { panBounds, seekTarget, timeText } from '../src/media.js';
-import { nativeAction, reelControl, reelLiked, reelRoute } from '../src/facebook.js';
+import { nativeAction, playbackRoute, reelControl, reelLiked } from '../src/facebook.js';
 import { languages, resolveLanguage, translator } from '../extension/languages.js';
 
 test('relative seeking crosses gaps in the requested direction', () => {
@@ -23,10 +23,31 @@ test('pan bounds account for letterboxing', () => {
   assert.equal(timeText(61.19), '1:01.1');
 });
 
-test('a reel path is required before attaching the player', () => {
-  assert.ok(reelRoute(new URL('https://www.facebook.com/reel/?s=tab')));
-  assert.ok(reelRoute(new URL('https://www.facebook.com/reel/1691796978562429/')));
-  assert.ok(!reelRoute(new URL('https://www.facebook.com/watch/?v=100')));
+test('the player attaches only to Reel and Story playback routes', () => {
+  const route = (path) => playbackRoute(new URL(path, 'https://www.facebook.com'));
+  assert.equal(route('/reel/?s=tab'), 'reel');
+  assert.equal(route('/reel/1691796978562429/'), 'reel');
+  assert.equal(route('/stories/123/UzpfSVNDOjEwNzEzMTAxNTU5OTgyNjA=/?source=story_tray'), 'story');
+  assert.equal(route('/stories/123'), 'story');
+  assert.equal(route('/stories/'), null);
+  assert.equal(route('/stories/create/'), null);
+  assert.equal(route('/watch/?v=100'), null);
+});
+
+test('Story navigation and pause use the Story viewer controls', () => {
+  const clicked = [];
+  const buttons = ['Nästa reel', 'Nästa händelse', 'Pausa', 'Gilla'].map((label) => ({
+    getAttribute: () => label,
+    getClientRects: () => [{}],
+    matches: () => false,
+    click: () => clicked.push(label),
+  }));
+  const story = { kind: 'story', card: { querySelectorAll: () => buttons } };
+
+  assert.equal(nativeAction(story, 'next'), true);
+  assert.equal(nativeAction(story, 'pause'), true);
+  assert.equal(nativeAction(story, 'like'), false);
+  assert.deepEqual(clicked, ['Nästa händelse', 'Pausa']);
 });
 
 test('the native Swedish Like button remains available as its label changes', () => {

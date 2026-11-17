@@ -265,7 +265,7 @@ svg {
   display: block;
   overflow: auto;
   max-height: 36vh;
-  scrollbar-color: #c6cdd8 #080b12;
+  scrollbar-width: none;
 }
 .caption-more {
   padding: 3px 0 0;
@@ -587,8 +587,7 @@ svg {
 .speed-options {
   max-height: min(48vh, 300px);
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--theme-accent) 65%, var(--theme-surface)) var(--theme-surface);
+  scrollbar-width: none;
 }
 .speed-options button[aria-pressed='true'],
 .speed-options button:hover {

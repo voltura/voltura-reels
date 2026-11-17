@@ -1,12 +1,16 @@
 html[data-voltura-reel-fullscreen] {
   background: #070909 !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
 }
 
 html[data-voltura-reel-fullscreen] body {
   visibility: hidden !important;
+  scrollbar-width: none !important;
 }
 
 html[data-voltura-reel-fullscreen] [data-voltura-reel-path] {
+  scrollbar-width: none !important;
   contain: none !important;
   content-visibility: visible !important;
   filter: none !important;

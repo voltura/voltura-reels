@@ -1,19 +1,20 @@
 import { ReelPlayer } from './player.js';
-import { findReel, reelRoute } from './facebook.js';
+import { findPlayback, playbackRoute } from './facebook.js';
 
 let player;
 let pending;
 
 function refresh() {
   pending = undefined;
-  if (!reelRoute(location)) {
+  const kind = playbackRoute(location);
+  if (!kind) {
     player?.destroy();
     player = undefined;
     return;
   }
-  const reel = findReel();
+  const reel = findPlayback(kind);
   if (!reel) {
-    player?.waitForReel();
+    player?.waitForPlayback();
     return;
   }
   player ??= new ReelPlayer(schedule);
@@ -26,7 +27,7 @@ function schedule() {
 
 const observer = new MutationObserver((records) => {
   if (
-    (player || reelRoute(location)) &&
+    (player || playbackRoute(location)) &&
     records.some((record) => {
       if (record.type === 'characterData') {
         const control = record.target.parentElement?.closest(

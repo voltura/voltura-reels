@@ -129,13 +129,35 @@ export class ReelPlayer {
     this.applyZoom();
   }
 
+  setPlaybackLabels(kind) {
+    const story = kind === 'story';
+    for (const [button, reelLabel, storyLabel] of [
+      [this.launch, 'Fullscreen reel', 'Fullscreen story'],
+      [this.get('previous'), 'Previous reel', 'Previous story'],
+      [this.get('next'), 'Next reel', 'Next story'],
+    ]) {
+      this.label(button, story ? storyLabel : reelLabel);
+    }
+    for (const [element, reelLabel, storyLabel] of [
+      [this.stage, 'Reel playback', 'Story playback'],
+      [this.ui.querySelector('.seek-controls'), 'Navigate reels and seek', 'Navigate stories and seek'],
+    ]) {
+      element.dataset.message = story ? storyLabel : reelLabel;
+      element.setAttribute('aria-label', this.translate(element.dataset.message));
+    }
+  }
+
   update(reel) {
+    if (this.reel?.kind !== reel.kind) {
+      if (this.active) void this.leave();
+      this.setPlaybackLabels(reel.kind);
+    }
     const samePath = this.reel?.key === reel.key;
-    const genericFeed = /^\/reels?$/.test(reel.key);
+    const reusableVideo = reel.kind === 'story' || /^\/reels?$/.test(reel.key);
     const sameFeedVideo =
       this.video === reel.video &&
       (!this.reel.source || !reel.source || this.reel.source === reel.source);
-    const sameReel = samePath && (!genericFeed || sameFeedVideo);
+    const sameReel = samePath && (!reusableVideo || sameFeedVideo);
     const changed = this.video !== reel.video || !sameReel;
     if (changed) {
       this.unpinVideo();
@@ -200,7 +222,8 @@ export class ReelPlayer {
     this.launch.style.top = `${clamp(y, margin, Math.max(margin, innerHeight - margin - size))}px`;
   }
 
-  waitForReel() {
+  waitForPlayback() {
+    if (this.active && this.reel.kind === 'story') void this.leave();
     if (!this.active) this.launch.hidden = true;
   }
 
@@ -343,8 +366,18 @@ export class ReelPlayer {
       this.video.style.removeProperty(name);
   }
 
+  canEnter() {
+    return (
+      !this.active &&
+      !this.launch.hidden &&
+      this.video?.isConnected &&
+      this.reel.key === location.pathname.replace(/\/$/, '') &&
+      !document.fullscreenElement
+    );
+  }
+
   enter() {
-    if (this.active || !this.video?.isConnected || document.fullscreenElement) return;
+    if (!this.canEnter()) return;
     const fullscreen = this.documentRoot.requestFullscreen({ navigationUI: 'hide' });
     this.fallbackMuted = undefined;
     this.volume = undefined;
@@ -525,11 +558,13 @@ export class ReelPlayer {
 
   togglePlay() {
     this.applyAudioPreference();
+    const story = this.reel.kind === 'story';
     if (!this.video.paused) {
-      this.video.pause();
+      if (!story || !nativeAction(this.reel, 'pause')) this.video.pause();
       return;
     }
     this.resumeInsideLoop();
+    if (story && nativeAction(this.reel, 'play')) return;
     void this.video.play().catch(() => this.announce('Playback unavailable'));
   }
 
@@ -779,7 +814,8 @@ export class ReelPlayer {
     selectRange.disabled = this.timeline.disabled;
     repeat.disabled = !duration;
     repeat.setAttribute('aria-pressed', String(Boolean(this.repeatEnabled)));
-    this.label(repeat, complete ? 'Repeat selected segment' : 'Repeat whole reel');
+    const wholeVideo = this.reel.kind === 'story' ? 'Repeat whole story' : 'Repeat whole reel';
+    this.label(repeat, complete ? 'Repeat selected segment' : wholeVideo);
     band.hidden = !complete;
     readout.hidden = this.get('clear').hidden = !exists;
     for (const edge of ['start', 'end']) {
@@ -855,6 +891,13 @@ export class ReelPlayer {
 
   renderOverlay() {
     const overlay = this.get('overlay');
+    const story = this.reel.kind === 'story';
+    overlay.hidden = story;
+    if (story) {
+      this.get('social').hidden = true;
+      this.get('creator').hidden = true;
+      return;
+    }
     paintIcon(overlay, this.hiddenOverlay ? 'eyeoff' : 'eye');
     this.label(overlay, this.hiddenOverlay ? 'Restore overlays' : 'Hide overlays');
     overlay.setAttribute('aria-pressed', String(this.hiddenOverlay));
@@ -1282,12 +1325,14 @@ export class ReelPlayer {
     const actions = {
       k: () => this.togglePlay(),
       m: () => this.get('mute').click(),
-      h: () => this.get('overlay').click(),
+      h: () => {
+        const overlay = this.get('overlay');
+        if (!overlay.hidden) overlay.click();
+      },
       s: () => this.get('frame').click(),
       r: () => this.get('rate').click(),
       v: () => this.get('volume-button').click(),
       c: () => this.setCaptions(),
-      f: () => void this.leave(),
       l: () => this.toggleRepeat(),
       pageup: () => this.navigate('previous'),
       pagedown: () => this.navigate('next'),
@@ -1299,7 +1344,7 @@ export class ReelPlayer {
       0: () => this.zoomAt(1),
     };
     this.on(
-      document,
+      window,
       'keydown',
       (event) => {
         if (event.ctrlKey || event.metaKey || event.isComposing) return;
@@ -1309,29 +1354,28 @@ export class ReelPlayer {
             (node) =>
               node instanceof Element &&
               node.matches(
-                'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]',
+                'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],[role="searchbox"]',
               ),
           );
         const focus = this.ui.activeElement;
         const key = event.key.toLowerCase();
-        if (!this.active) {
-          if (
-            key === 'f' &&
-            !editable &&
-            !event.altKey &&
-            !event.shiftKey &&
-            !event.repeat &&
-            focus === this.launch &&
-            !this.launch.hidden &&
-            !document.querySelector('[role="dialog"][aria-modal="true"]')
-          ) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            this.enter();
+        if (key === 'f' && !event.altKey && !event.shiftKey) {
+          if (editable && !(this.active && focus?.matches('input[type="range"]'))) return;
+          if (!this.active) {
+            if (!this.canEnter()) return;
+            const dialogs = document.querySelectorAll('dialog[open], [role="dialog"][aria-modal="true"]');
+            const blocked = Array.from(dialogs).some(
+              (dialog) => !dialog.contains(this.video) && dialog.checkVisibility({ visibilityProperty: true }),
+            );
+            if (blocked) return;
           }
+          if (!event.repeat) {
+            if (this.active) void this.leave();
+            else this.enter();
+          }
+        } else if (!this.active) {
           return;
-        }
-        if (key === 'escape') {
+        } else if (key === 'escape') {
           if (!this.get('rates').hidden || !this.get('volume-popover').hidden) {
             const trigger = this.get('rates').hidden ? 'volume-button' : 'rate';
             this.closePopovers();
