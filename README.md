@@ -1,6 +1,6 @@
 # Voltura Reel Player
 
-Watch Facebook Reels fullscreen in Chrome. Step through a moment, repeat a section, or zoom in on a detail.
+Watch Facebook Reels and video Stories fullscreen in Chrome. Step through a moment, repeat a section, or zoom in on a detail.
 
 **[Add to Chrome for free](https://chromewebstore.google.com/detail/voltura-reel-player/lmifcnkdamfogmmenenndpccgcbjnedn?utm_source=github&utm_medium=referral&utm_campaign=reel_player_launch&utm_content=readme)** · [Watch the demo](https://reels.voltura.se/) · [Privacy](https://reels.voltura.se/privacy.html)
 
@@ -16,7 +16,7 @@ Watch Facebook Reels fullscreen in Chrome. Step through a moment, repeat a secti
 
 ## Using the player
 
-Open a Facebook reel and select the fullscreen button above the reel navigation. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **Esc** to leave fullscreen.
+Open a Facebook reel or video Story and select the fullscreen button or press **F**. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **F** again or press **Esc** to leave fullscreen. When Stories advance to a photo, playback returns to Facebook’s Story viewer.
 
 To repeat a segment, drag the range handles or Shift-drag on the timeline, then turn on Repeat. Open the extension from Chrome’s toolbar to change your preferences.
 

@@ -14,12 +14,21 @@ const labels = {
   expand: /^(see more|show more|visa mer)$/i,
 };
 
+const storyLabels = {
+  previous: /^(previous story|föregående (händelse|berättelse))$/i,
+  next: /^(next story|nästa (händelse|berättelse))$/i,
+  play: /^(play(?: (?:story|video))?|resume(?: story)?|spela(?: upp)?|återuppta)$/i,
+  pause: /^(pause(?: (?:story|video))?|pausa)$/i,
+};
+
 function name(element) {
   return element.getAttribute('aria-label') || element.textContent.trim();
 }
 
-export function reelRoute(url) {
-  return /^\/reels?(?:\/\d+)?\/?$/.test(url.pathname);
+export function playbackRoute(url) {
+  if (/^\/reels?(?:\/\d+)?\/?$/.test(url.pathname)) return 'reel';
+  if (/^\/stories\/\d+(?:\/[^/]+)?\/?$/.test(url.pathname)) return 'story';
+  return null;
 }
 
 export function reelHeaderBottom() {
@@ -36,13 +45,16 @@ export function reelHeaderBottom() {
   return bottom;
 }
 
-export function findReel() {
-  if (!reelRoute(location)) return null;
+export function findPlayback(kind) {
   let best;
   let overlap = 0;
   for (const video of document.querySelectorAll('video')) {
     const wrapper =
       video.closest('[aria-label="Video player"], [data-video-player]') ?? video.parentElement;
+    if (
+      kind === 'story' &&
+      (video.closest('[aria-hidden="true"],[inert]') || !wrapper.checkVisibility({ opacityProperty: true }))
+    ) continue;
     // Fullscreen styling changes the video bounds. The wrapper stays in the reel feed.
     const bounds = wrapper.getBoundingClientRect();
     const visibleWidth = Math.min(innerWidth, bounds.right) - Math.max(bounds.left, 0);
@@ -55,6 +67,12 @@ export function findReel() {
     }
   }
   if (!best) return null;
+  const key = location.pathname.replace(/\/$/, '');
+  const source = best.video.getAttribute('src') || best.video.currentSrc;
+  if (kind === 'story') {
+    const card = storyCard(best.wrapper);
+    return card && { ...best, kind, card, key, source };
+  }
   const main = best.wrapper.closest('[role="main"],main');
   let card = best.wrapper;
   while (card.parentElement && card.parentElement !== main) {
@@ -62,15 +80,27 @@ export function findReel() {
     if (card.parentElement.querySelectorAll('video').length > 1) break;
     card = card.parentElement;
   }
-  const key = location.pathname.replace(/\/$/, '');
-  const source = best.video.getAttribute('src') || best.video.currentSrc;
-  return { ...best, card, key, source };
+  return { ...best, kind, card, key, source };
 }
 
-function findButton(scope, action) {
+function findButton(scope, action, buttonLabels = labels) {
   return Array.from(scope.querySelectorAll(controls)).find(
-    (element) => labels[action].test(name(element)) && element.getClientRects().length,
+    (element) => buttonLabels[action].test(name(element)) && element.getClientRects().length,
   );
+}
+
+function storyCard(wrapper) {
+  let playback;
+  for (let element = wrapper; element && element !== document.body; element = element.parentElement) {
+    if (findButton(element, 'previous', storyLabels) || findButton(element, 'next', storyLabels)) {
+      return element;
+    }
+    if (!playback && (findButton(element, 'play', storyLabels) || findButton(element, 'pause', storyLabels))) {
+      playback = element;
+    }
+    if (element.querySelectorAll('video').length > 1) break;
+  }
+  return playback;
 }
 
 function findFollowControl(scope) {
@@ -88,6 +118,9 @@ function findFollowControl(scope) {
 }
 
 export function reelControl(reel, action) {
+  if (reel.kind === 'story') {
+    return Object.hasOwn(storyLabels, action) ? findButton(reel.card, action, storyLabels) : undefined;
+  }
   const navigation = action === 'previous' || action === 'next';
   return findButton(
     navigation ? (reel.card.closest('[role="main"],main') ?? document) : reel.card,
@@ -111,7 +144,8 @@ export function reelMuteControl(reel) {
     /^(mute(?: (?:audio|video|sound))?|turn (?:off sound|sound off)|stäng av ljudet|inaktivera)$/i;
   const unmute =
     /^(unmute(?: (?:audio|video|sound))?|turn (?:on sound|sound on)|slå på ljudet|aktivera)$/i;
-  for (const button of reel.wrapper.querySelectorAll(controls)) {
+  const scope = reel.kind === 'story' ? reel.card : reel.wrapper;
+  for (const button of scope.querySelectorAll(controls)) {
     if (!isEnabled(button) || !button.getClientRects().length) continue;
     const label = name(button);
     if (mute.test(label)) return { button, muted: false };
