@@ -23,6 +23,8 @@ const icons = {
   left: '<path d="m15 6-6 6 6 6"/>',
   right: '<path d="m9 6 6 6-6 6"/>',
   next: '<path d="M19 6v12M7 6l6 6-6 6"/>',
+  'seek-back': '<path d="M7 4 3 8l4 4M3 8h10a6 6 0 0 1 0 12H9"/>',
+  'seek-forward': '<path d="m17 4 4 4-4 4m4-4H11a6 6 0 0 0 0 12h4"/>',
   repeat: '<path d="m16 3 4 4-4 4M4 11V9a2 2 0 0 1 2-2h14M8 21l-4-4 4-4m12 0v2a2 2 0 0 1-2 2H4"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
@@ -39,7 +41,7 @@ const icons = {
 };
 
 export function paintIcon(element, name) {
-  if (element.dataset.icon === name && element.firstElementChild) return;
+  if (element.dataset.icon === name && element.firstElementChild?.localName === 'svg') return;
   element.dataset.icon = name;
   element.querySelector('svg')?.remove();
   element.insertAdjacentHTML(

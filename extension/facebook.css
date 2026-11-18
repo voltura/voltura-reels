@@ -9,7 +9,7 @@ html[data-voltura-reel-fullscreen] body {
   scrollbar-width: none !important;
 }
 
-html[data-voltura-reel-fullscreen] [data-voltura-reel-path] {
+html[data-voltura-reel-fullscreen] :is([data-voltura-reel-path], [data-voltura-story-progress-path], [data-voltura-story-action-path]) {
   scrollbar-width: none !important;
   contain: none !important;
   content-visibility: visible !important;
@@ -25,7 +25,75 @@ html[data-voltura-reel-fullscreen] [data-voltura-reel-path] {
   opacity: 1 !important;
 }
 
-html[data-voltura-reel-fullscreen] [data-voltura-reel-video] {
+html[data-voltura-reel-fullscreen] [data-voltura-story-progress] {
+  position: fixed !important;
+  top: 12px !important;
+  left: 50% !important;
+  right: auto !important;
+  width: var(--voltura-story-progress-width, 364px) !important;
+  margin: 0 !important;
+  transform: translateX(-50%) !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  z-index: 2147483646 !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-story-action] {
+  --voltura-story-action-pitch: clamp(26px, calc((100vh - 128px) / 8), 52px);
+  position: fixed !important;
+  top: calc(50% + var(--voltura-story-action-offset) * var(--voltura-story-action-pitch)) !important;
+  right: 14px !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: 2147483647 !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-story-action='share'] {
+  width: max-content !important;
+  min-width: 0 !important;
+  padding-inline: 8px !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-story-reaction-still] {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-story-reaction-tooltip] {
+  top: 50% !important;
+  right: calc(100% + 12px) !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+html[data-voltura-reel-fullscreen] [data-voltura-story-action='reaction']:not(:hover) [data-voltura-story-reaction-animation],
+html[data-voltura-reel-fullscreen] [data-voltura-story-action='reaction']:hover [data-voltura-story-reaction-still] {
+  visibility: hidden !important;
+}
+
+html[data-voltura-reel-fullscreen][data-voltura-story-actions-idle] [data-voltura-story-action] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+@media (max-height: 460px) {
+  html[data-voltura-reel-fullscreen] [data-voltura-story-action] {
+    transform: translateY(-50%) scale(0.72) !important;
+    transform-origin: right center !important;
+  }
+}
+
+html[data-voltura-reel-fullscreen] :is([data-voltura-reel-video], [data-voltura-story-photo]) {
   position: fixed !important;
   inset: 0 !important;
   box-sizing: border-box !important;

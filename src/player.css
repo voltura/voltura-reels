@@ -42,6 +42,12 @@ svg {
   z-index: 2147483646;
   color: var(--theme-on-surface);
 }
+.photo-story :is(.scrubber, .loop-controls, .timecode, .extras .popover-wrap, #back, #forward, #cc) {
+  display: none;
+}
+.photo-story .extras {
+  margin-inline-start: auto;
+}
 .player-layout {
   position: absolute;
   inset: 0;
@@ -54,6 +60,20 @@ svg {
   inset: 0;
   cursor: pointer;
   touch-action: none;
+}
+.story-video-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #070909;
+}
+.waiting-for-story-video :is(.scrubber, .seek-controls button, .transport, .loop-controls, .extras, #frame, #zoom-out, #zoom-in, #zoom-reset) {
+  display: none;
+}
+.waiting-for-story-video .viewport {
+  pointer-events: none;
 }
 .viewport.zoomed {
   cursor: grab;
@@ -83,6 +103,7 @@ svg {
 .utility-end {
   display: flex;
   gap: 6px;
+  margin-inline-start: auto;
 }
 :is(#overlay, .utility-end, .social) {
   transition: opacity 0.24s;
@@ -275,14 +296,18 @@ svg {
   text-align: start;
 }
 .dock {
+  --dock-normal-width: 920px;
+  --dock-inline-padding: 9px;
+  --dock-border-width: 1px;
+  --dock-inline-gutter: 24px;
   position: absolute;
   z-index: 5;
   bottom: 9px;
-  width: calc(100% - 24px);
-  max-width: 920px;
+  width: calc(100% - var(--dock-inline-gutter));
+  max-width: var(--dock-normal-width);
   container-type: inline-size;
-  padding: 6px 9px 7px;
-  border: 1px solid var(--theme-border);
+  padding: 6px var(--dock-inline-padding) 7px;
+  border: var(--dock-border-width) solid var(--theme-border);
   border-radius: 10px;
   background: color-mix(in srgb, var(--theme-surface) var(--control-background-opacity), transparent);
   box-shadow: 0 5px 18px #0005;
@@ -291,7 +316,14 @@ svg {
     transform 0.24s;
 }
 .dock[data-width='auto'] {
-  max-width: calc(920px + (100% - 944px) * var(--dock-expansion, 0));
+  max-width: calc(
+    var(--dock-normal-width) + (100% - var(--dock-inline-gutter) - var(--dock-normal-width)) * var(--dock-expansion, 0)
+  );
+}
+.dock[data-width='auto'] .dock-row {
+  --dock-normal-content-width: calc(var(--dock-normal-width) - 2 * (var(--dock-inline-padding) + var(--dock-border-width)));
+  /* Keep the controls aligned with a Normal-width dock even as the timeline widens. */
+  padding-inline-start: max(0px, calc((100% - var(--dock-normal-content-width)) / 2));
 }
 .dock[data-width='small'] {
   max-width: 680px;
@@ -304,7 +336,7 @@ svg {
   transform: translateY(4px);
   pointer-events: none;
 }
-.dock.faded:has(:focus-visible) {
+.stage:not(.pointer-controls) .dock.faded:has(:focus-visible) {
   opacity: 1;
   transform: none;
   pointer-events: auto;
@@ -313,13 +345,57 @@ svg {
   bottom: 14px;
 }
 .dock-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: end;
+  gap: 7px;
+}
+.fixed-controls,
+.playback-controls {
   min-height: 34px;
   display: flex;
   align-items: center;
   gap: 7px;
 }
+.fixed-controls {
+  --step-width: 28px;
+  --step-gap: 3px;
+}
+.navigation-controls,
+.seek-controls {
+  display: grid;
+  grid-template-rows: 30px;
+  gap: var(--step-gap);
+}
+.navigation-controls {
+  grid-template-columns: repeat(4, var(--step-width));
+}
+.seek-controls {
+  grid-template-columns: repeat(2, var(--step-width));
+}
+.fixed-controls .step {
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+  padding-inline: 0;
+}
+:is(#previous-story, #previous, #back) {
+  grid-column: 1;
+}
+.stage[data-kind='story'] #previous,
+#forward {
+  grid-column: 2;
+}
+.stage[data-kind='story'] #next {
+  grid-column: 3;
+}
+:is(#next, #next-story) {
+  grid-column: 4;
+}
+.playback-controls {
+  flex-wrap: wrap;
+}
 .transport,
-.seek-controls,
 .extras,
 .loop-controls,
 .loop-marks,
@@ -365,8 +441,14 @@ svg {
   fill: currentColor;
   stroke-width: 1.5;
 }
-.dock-button.step {
-  min-width: 28px;
+.photo-story .dock-button.play:has(#story-timer-text:not([hidden])),
+#story-video,
+#back-to-story {
+  width: auto;
+  gap: 4px;
+  padding-inline: 8px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 .timecode,
 .loop-readout,
@@ -635,9 +717,12 @@ svg {
 }
 .launch {
   position: fixed;
+  top: 76px;
+  /* Keep the same offset when Facebook adds or removes a viewport scrollbar. */
+  left: max(12px, calc(100vw - 72px));
   z-index: 2147483647;
-  width: var(--launch-size, 44px);
-  height: var(--launch-size, 44px);
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 50%;
 }
@@ -726,6 +811,10 @@ svg {
   left: auto;
   right: 0;
 }
+.navigation-controls .tooltip {
+  left: 0;
+  transform: none;
+}
 #exit-dock .tooltip {
   left: auto;
   right: -4px;
@@ -736,12 +825,17 @@ svg {
   opacity: 0;
 }
 @container (max-width:570px) {
-  .dock-row {
+  .dock-row,
+  .playback-controls {
     gap: 2px;
+  }
+  .fixed-controls {
+    --step-width: 23px;
+    --step-gap: 1px;
+    gap: 4px;
   }
   .extras,
   .transport,
-  .seek-controls,
   .loop-controls {
     gap: 1px;
   }
@@ -752,9 +846,6 @@ svg {
   .text-button {
     min-width: 24px;
     padding-inline: 4px;
-  }
-  .dock-button.step {
-    min-width: 23px;
   }
   .dock-button.play {
     width: 30px;
@@ -770,7 +861,25 @@ svg {
 }
 @container (max-width:500px) {
   .dock-row {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .playback-controls {
+    grid-row: 1;
+  }
+  .fixed-controls {
+    grid-row: 2;
+    justify-self: start;
+  }
+  .transport .tooltip,
+  #back-to-story .tooltip {
+    left: 0;
+    transform: none;
+  }
+  .loop-controls .tooltip,
+  .extras .tooltip {
+    left: auto;
+    right: 0;
+    transform: none;
   }
   .extras {
     margin-inline-start: auto;

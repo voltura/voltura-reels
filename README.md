@@ -1,6 +1,6 @@
 # Voltura Reel Player
 
-Watch Facebook Reels and video Stories fullscreen in Chrome. Step through a moment, repeat a section, or zoom in on a detail.
+Watch Facebook Reels and video or photo Stories fullscreen in Chrome. Step through a video, repeat a section, or zoom in on a detail.
 
 **[Add to Chrome for free](https://chromewebstore.google.com/detail/voltura-reel-player/lmifcnkdamfogmmenenndpccgcbjnedn?utm_source=github&utm_medium=referral&utm_campaign=reel_player_launch&utm_content=readme)** · [Watch the demo](https://reels.voltura.se/) · [Privacy](https://reels.voltura.se/privacy.html)
 
@@ -8,15 +8,21 @@ Watch Facebook Reels and video Stories fullscreen in Chrome. Step through a mome
 
 ## What you can do
 
-- Switch between reels in fullscreen.
-- Scrub the timeline, step by 0.1 seconds, or play at 0.10× to 4× speed.
-- Repeat the whole reel or select a segment with range handles or A/B marks.
-- Zoom up to 10×, pan, and save an available paused frame as a full-resolution PNG.
-- Hide reel overlays and choose your theme, language, and control bar width.
+- Watch Reels and photo or video Stories fullscreen. Navigation and seek buttons stay in fixed positions as the content changes.
+- Scrub a video, step by 0.1 seconds, jump by 5 seconds with Shift and the arrow keys, or play at 0.10× to 4× speed.
+- Repeat a video or select a segment with range handles or A/B marks. Toggle spoken captions when the video offers them.
+- Zoom up to 10×, pan, and save a paused video frame as a PNG or the displayed Story image.
+- Hide Reel overlays and choose from 10 themes and 16 languages. Set the control bar width and whether it fades when idle.
 
 ## Using the player
 
-Open a Facebook reel or video Story and select the fullscreen button or press **F**. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **F** again or press **Esc** to leave fullscreen. When Stories advance to a photo, playback returns to Facebook’s Story viewer.
+Open a Facebook reel or Story and select the fullscreen button or press **F**. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **F** again or press **Esc** to leave fullscreen.
+
+The Story viewer keeps Facebook’s progress bars. Use **‹** and **›** to move between cards or **|‹** and **›|** to switch Stories. Switching Stories starts on the first card. A paused Story stays paused when you navigate.
+
+If a card links to a Reel, select **Play video** or click the picture. The Reel plays in fullscreen and inherits the Story’s mute state. Select **Back to Story** to return. When Facebook offers them, the right-side stack shows its seven reactions and **Share**, which opens Facebook’s sharing panel.
+
+Pause on the image you want, then click **Save image** or press **S**. This saves a video frame as PNG, downloads the displayed Story photo, or crops a linked Reel preview to its inner picture. The player confirms when the file is saved.
 
 To repeat a segment, drag the range handles or Shift-drag on the timeline, then turn on Repeat. Open the extension from Chrome’s toolbar to change your preferences.
 

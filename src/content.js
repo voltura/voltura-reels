@@ -1,5 +1,5 @@
 import { ReelPlayer } from './player.js';
-import { findPlayback, playbackRoute } from './facebook.js';
+import { findPlayback, findStoryGate, playbackRoute } from './facebook.js';
 
 let player;
 let pending;
@@ -12,13 +12,12 @@ function refresh() {
     player = undefined;
     return;
   }
-  const reel = findPlayback(kind);
-  if (!reel) {
-    player?.waitForPlayback();
-    return;
-  }
-  player ??= new ReelPlayer(schedule);
-  player.update(reel);
+  const gate = kind === 'story' ? findStoryGate() : null;
+  const reel = gate ? null : findPlayback(kind);
+  if (gate || reel) player ??= new ReelPlayer(schedule);
+  if (gate) player.showStoryGate(gate);
+  else if (reel) player.update(reel);
+  else player?.waitForPlayback();
 }
 
 function schedule() {
@@ -45,10 +44,13 @@ observer.observe(document.documentElement, {
   childList: true,
   characterData: true,
   attributes: true,
-  attributeFilter: ['src', 'loop', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-label'],
+  attributeFilter: ['src', 'srcset', 'loop', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-label'],
 });
 navigation.addEventListener('currententrychange', schedule);
 window.addEventListener('resize', schedule);
 document.addEventListener('scroll', schedule, { capture: true, passive: true });
 document.addEventListener('loadedmetadata', schedule, true);
+document.addEventListener('load', (event) => {
+  if (event.target.localName === 'img' && playbackRoute(location) === 'story') schedule();
+}, true);
 schedule();
