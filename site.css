@@ -103,10 +103,12 @@ nav {
   font-size: 0.95rem;
 }
 .screenshots,
+.stories,
 .settings {
   margin-top: 58px;
 }
 .screenshots h2,
+.stories h2,
 .settings h2 {
   margin-bottom: 17px;
   font-size: 1.6rem;

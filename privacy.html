@@ -22,21 +22,25 @@
           fullscreen controls. Voltura AB receives no Reel or Story content, browsing
           history, account information, or telemetry from the extension.
         </p>
-        <h2>Facebook Reels and video Stories</h2>
+        <h2>Facebook Reels and Stories</h2>
         <p>
           The extension reads the current reel’s video state, author name and
-          photo, description, and available controls on Facebook. For video
-          Stories, it reads the current video state and playback controls. Actions such
-          as liking, following, or saving use Facebook’s controls and are
-          handled by Facebook. Author photos are loaded from their original page
-          URLs.
+          photo, description, and available controls on Facebook. In Stories,
+          it reads the current video state or displayed image and the available
+          playback and reaction controls. Facebook handles liking, reacting,
+          sharing, following, and saving to Facebook through its own controls.
+          Linked Reels play in Facebook’s embedded player. Author photos are
+          loaded from their original page URLs.
         </p>
-        <h2>Preferences and saved frames</h2>
+        <h2>Preferences and downloads</h2>
         <p>
-          Chrome stores your player preferences locally. When you choose to save
-          a frame, Chrome downloads the PNG to your device. Removing the
-          extension clears its stored preferences. Downloaded files stay on your
-          device until you delete them.
+          Chrome stores your player preferences locally. When you choose Save
+          image, the extension uses Chrome’s Downloads API to save the selected
+          frame, photo, or cropped linked Reel preview to your device and check
+          whether that download completed. To crop a linked Reel preview, it
+          retrieves the selected image from Facebook’s image servers and crops
+          it locally. Removing the extension clears its stored preferences.
+          Downloaded files stay on your device until you delete them.
         </p>
         <h2>Contact</h2>
         <p>

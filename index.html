@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Watch Facebook Reels and video Stories fullscreen in Chrome with precise seeking, segment repeat, zoom, and frame capture."
+      content="Watch Facebook Reels and Stories fullscreen in Chrome. Seek, repeat, and zoom in videos, or pause photo Stories and save the displayed image."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://reels.voltura.se/" />
@@ -13,7 +13,7 @@
     <meta property="og:title" content="Voltura Reel Player" />
     <meta
       property="og:description"
-      content="Watch Facebook Reels and video Stories fullscreen in Chrome with precise seeking, segment repeat, zoom, and frame capture."
+      content="Watch Facebook Reels and Stories fullscreen in Chrome. Seek, repeat, and zoom in videos, or pause photo Stories and save the displayed image."
     />
     <meta
       property="og:image"
@@ -30,7 +30,7 @@
     <meta name="twitter:title" content="Voltura Reel Player" />
     <meta
       name="twitter:description"
-      content="Watch Facebook Reels and video Stories fullscreen in Chrome with precise seeking, segment repeat, zoom, and frame capture."
+      content="Watch Facebook Reels and Stories fullscreen in Chrome. Seek, repeat, and zoom in videos, or pause photo Stories and save the displayed image."
     />
     <meta
       name="twitter:image"
@@ -43,7 +43,7 @@
     <link rel="canonical" href="https://reels.voltura.se/" />
     <link rel="icon" href="icon.png" />
     <link rel="stylesheet" href="site.css" />
-    <title>Voltura Reel Player | Fullscreen Facebook Reels for Chrome</title>
+    <title>Voltura Reel Player | Fullscreen Facebook Reels and Stories for Chrome</title>
   </head>
   <body>
     <main class="container">
@@ -55,11 +55,11 @@
       </header>
       <section class="hero" aria-labelledby="headline">
         <div>
-          <h1 id="headline">Facebook Reels and video Stories, fullscreen.</h1>
+          <h1 id="headline">Facebook Reels and Stories, fullscreen.</h1>
           <p>
-            Open a reel or a Story that plays video directly in Facebook, then
-            press F or select the fullscreen button. Step through a moment,
-            repeat a section, or zoom in on a detail.
+            Open a reel or a photo or video Story, then press F or select the
+            fullscreen button. Step through a video, or pause a photo Story
+            and save the displayed image.
           </p>
           <nav aria-label="Product links">
             <a
@@ -104,10 +104,46 @@
         <article>
           <h2>Keep watching</h2>
           <p>
-            Switch between reels or video Stories in fullscreen. When a Story
-            advances to a photo, the player returns to Facebook’s Story viewer.
+            Switch between Reels without leaving fullscreen. Navigation and seek
+            buttons stay in place as the content changes.
           </p>
         </article>
+      </section>
+      <section class="stories" aria-labelledby="stories-title">
+        <h2 id="stories-title">Watch Stories fullscreen</h2>
+        <div class="features">
+          <article>
+            <h3>Move through Stories</h3>
+            <p>
+              See Facebook’s progress bars, move between cards, or jump to the
+              first card of the next or previous Story. Pause auto-advance for a
+              closer look.
+            </p>
+          </article>
+          <article>
+            <h3>Play a shared Reel</h3>
+            <p>
+              Start a linked Reel right from the Story in fullscreen. It starts
+              with the Story’s mute setting, and Back to Story returns you to the
+              card.
+            </p>
+          </article>
+          <article>
+            <h3>Save the picture</h3>
+            <p>
+              Save a Story photo, a cropped Reel preview, or a paused video frame.
+              The player tells you when the file is saved.
+            </p>
+          </article>
+          <article>
+            <h3>React or share</h3>
+            <p>
+              When available, Facebook’s seven reactions appear along the right
+              edge. Share opens Facebook’s sharing panel.
+            </p>
+          </article>
+        </div>
+        <p>Story features are included in <a href="https://github.com/voltura/voltura-reels/releases/tag/v1.1.1">version 1.1.1</a>.</p>
       </section>
       <section class="screenshots" aria-labelledby="screenshots-title">
         <h2 id="screenshots-title">Screenshots</h2>
@@ -173,7 +209,7 @@
         </a>
       </section>
       <section id="demo" class="demo">
-        <h2>See it in action</h2>
+        <h2>See Reel playback in action</h2>
         <video
           class="screen"
           controls
