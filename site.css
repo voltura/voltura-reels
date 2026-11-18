@@ -61,11 +61,6 @@ p {
   max-width: 35ch;
   margin: 22px 0 28px;
 }
-.hero .hero-version {
-  max-width: 42ch;
-  margin: 12px 0 0;
-  font-size: 0.875rem;
-}
 nav {
   display: flex;
   flex-wrap: wrap;
