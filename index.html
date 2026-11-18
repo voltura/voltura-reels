@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Watch Facebook Reels and Stories fullscreen in Chrome. Seek, repeat, and zoom in videos, or pause photo Stories and save the displayed image."
+      content="Watch Facebook Reels and Stories fullscreen with a free desktop Chrome extension. Seek precisely, loop part of a Reel, change playback speed, and zoom in."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://reels.voltura.se/" />
     <meta property="og:site_name" content="Voltura Reel Player" />
-    <meta property="og:title" content="Voltura Reel Player" />
+    <meta property="og:title" content="Fullscreen Facebook Reels &amp; Stories | Voltura Reel Player" />
     <meta
       property="og:description"
-      content="Watch Facebook Reels and Stories fullscreen in Chrome. Seek, repeat, and zoom in videos, or pause photo Stories and save the displayed image."
+      content="Watch Facebook Reels and Stories fullscreen with a free desktop Chrome extension. Seek precisely, loop part of a Reel, change playback speed, and zoom in."
     />
     <meta
       property="og:image"
@@ -27,10 +27,10 @@
       content="Voltura Reel Player showing a reel of a mountain road with fullscreen playback controls."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Voltura Reel Player" />
+    <meta name="twitter:title" content="Fullscreen Facebook Reels &amp; Stories | Voltura Reel Player" />
     <meta
       name="twitter:description"
-      content="Watch Facebook Reels and Stories fullscreen in Chrome. Seek, repeat, and zoom in videos, or pause photo Stories and save the displayed image."
+      content="Watch Facebook Reels and Stories fullscreen with a free desktop Chrome extension. Seek precisely, loop part of a Reel, change playback speed, and zoom in."
     />
     <meta
       name="twitter:image"
@@ -43,7 +43,7 @@
     <link rel="canonical" href="https://reels.voltura.se/" />
     <link rel="icon" href="icon.png" />
     <link rel="stylesheet" href="site.css" />
-    <title>Voltura Reel Player | Fullscreen Facebook Reels and Stories for Chrome</title>
+    <title>Fullscreen Facebook Reels &amp; Stories | Voltura Reel Player</title>
   </head>
   <body>
     <main class="container">
@@ -55,11 +55,10 @@
       </header>
       <section class="hero" aria-labelledby="headline">
         <div>
-          <h1 id="headline">Facebook Reels and Stories, fullscreen.</h1>
+          <h1 id="headline">Fullscreen Facebook Reels and Stories</h1>
           <p>
-            Open a reel or a photo or video Story, then press F or select the
-            fullscreen button. Step through a video, or pause a photo Story
-            and save the displayed image.
+            Voltura Reel Player is a free extension for desktop Chrome.
+            Slow down a Reel, loop a section, or zoom in without leaving Facebook.
           </p>
           <nav aria-label="Product links">
             <a
@@ -70,6 +69,14 @@
             <a href="#demo">Watch the demo</a>
             <a href="#playback">Explore the controls</a>
           </nav>
+          <ul class="hero-links">
+            <li><a href="https://chromewebstore.google.com/detail/voltura-reel-player/lmifcnkdamfogmmenenndpccgcbjnedn/reviews">Chrome Web Store reviews</a></li>
+            <li><a href="privacy.html">Privacy policy</a></li>
+          </ul>
+          <p class="hero-version">
+            Fullscreen Stories require version 1.1.1 or later.
+            <a href="https://github.com/voltura/voltura-reels/releases/tag/v1.1.1">Get version 1.1.1 on GitHub</a>.
+          </p>
         </div>
         <img
           class="screen"
@@ -79,35 +86,44 @@
           alt="Voltura Reel Player showing a mountain road with its fullscreen playback controls."
         />
       </section>
-      <section id="playback" class="features" aria-label="Playback features">
-        <article>
-          <h2>Find the exact moment</h2>
-          <p>
-            Scrub a wider timeline, step by 0.1 seconds, and adjust playback
-            speed from 0.10× to 4×.
-          </p>
-        </article>
-        <article>
-          <h2>Repeat a section</h2>
-          <p>
-            Drag the range handles or set A and B marks. Repeat the selection or
-            the entire reel.
-          </p>
-        </article>
-        <article>
-          <h2>Look closer</h2>
-          <p>
-            Zoom up to 10×, pan across the video, and save an available paused
-            frame as a full-resolution PNG.
-          </p>
-        </article>
-        <article>
-          <h2>Keep watching</h2>
-          <p>
-            Switch between Reels without leaving fullscreen. Navigation and seek
-            buttons stay in place as the content changes.
-          </p>
-        </article>
+      <section id="playback" aria-labelledby="playback-title">
+        <h2 id="playback-title" class="section-title">Why use Voltura Reel Player?</h2>
+        <p class="section-intro">
+          The extension adds a wider video timeline and keyboard shortcuts
+          to Facebook. After installing it, open a Reel or a photo or video
+          Story, then press <kbd>F</kbd> or select the fullscreen button.
+          Press <kbd>Esc</kbd> to exit.
+        </p>
+        <div class="features">
+          <article>
+            <h3>Seek and change speed</h3>
+            <p>
+              Scrub a wider timeline, step by 0.1 seconds, and adjust playback
+              speed from 0.10× to 4×.
+            </p>
+          </article>
+          <article>
+            <h3>Loop part of a Reel</h3>
+            <p>
+              Drag the range handles or set A and B marks. Repeat the selection
+              or the entire Reel.
+            </p>
+          </article>
+          <article>
+            <h3>Zoom and save a frame</h3>
+            <p>
+              Zoom up to 10×, pan across the video, and save an available paused
+              frame as a full-resolution PNG.
+            </p>
+          </article>
+          <article>
+            <h3>Stay in fullscreen</h3>
+            <p>
+              Switch between Reels without leaving fullscreen. Navigation and
+              seek buttons stay in place as the content changes.
+            </p>
+          </article>
+        </div>
       </section>
       <section class="stories" aria-labelledby="stories-title">
         <h2 id="stories-title">Watch Stories fullscreen</h2>
@@ -143,7 +159,6 @@
             </p>
           </article>
         </div>
-        <p>Story features are included in <a href="https://github.com/voltura/voltura-reels/releases/tag/v1.1.1">version 1.1.1</a>.</p>
       </section>
       <section class="screenshots" aria-labelledby="screenshots-title">
         <h2 id="screenshots-title">Screenshots</h2>
@@ -227,6 +242,30 @@
         </video>
         <p><a href="https://www.youtube.com/watch?v=3NI2L537PKk">Watch on YouTube</a></p>
       </section>
+      <section class="about" aria-labelledby="about-title">
+        <h2 id="about-title" class="section-title">About Voltura AB</h2>
+        <div class="about-grid">
+          <div>
+            <p>
+              Voltura Reel Player is made by Voltura AB, an independent software
+              business in Stockholm, Sweden. <a href="https://voltura.se/">Visit Voltura AB</a>
+              or <a href="https://github.com/voltura/voltura-reels">view the source on GitHub</a>.
+            </p>
+            <p>
+              The extension processes playback in Chrome. Voltura AB receives
+              no Reel or Story content, browsing history, account information,
+              or extension telemetry. <a href="privacy.html">Read the privacy policy</a>.
+            </p>
+          </div>
+          <div>
+            <h3>Reviews and support</h3>
+            <p>
+              If you’ve used Reel Player, <a href="https://chromewebstore.google.com/detail/voltura-reel-player/lmifcnkdamfogmmenenndpccgcbjnedn/reviews">leave an honest review on the Chrome Web Store</a>.
+              If you need help, <a href="https://github.com/voltura/voltura-reels/issues">report an issue on GitHub</a>.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
     <footer class="container footer">
       <span>Voltura AB · Independent of Meta</span>
@@ -234,7 +273,6 @@
         href="https://chromewebstore.google.com/detail/voltura-reel-player/lmifcnkdamfogmmenenndpccgcbjnedn?utm_source=reels.voltura.se&amp;utm_medium=referral&amp;utm_campaign=reel_player_launch&amp;utm_content=footer"
         >Chrome Web Store</a
       >
-      <a href="https://chromewebstore.google.com/detail/voltura-reel-player/lmifcnkdamfogmmenenndpccgcbjnedn/reviews">Leave a review</a>
       <a href="privacy.html">Privacy</a
       ><a href="https://github.com/voltura/voltura-reels">GitHub</a>
     </footer>
