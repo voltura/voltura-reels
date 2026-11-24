@@ -88,8 +88,8 @@ function mountShorts() {
     if (player.update(reel) === false) return;
     if (!player.active) {
       const { left, right, top } = reel.bounds;
-      const alongside = left >= 168;
-      const x = alongside ? left - 92 : Math.min(innerWidth - 92, right - 92);
+      const alongside = left >= 124;
+      const x = alongside ? left - 44 : Math.min(innerWidth - 44, right - 44);
       player.host.style.setProperty('--shorts-launch-left', `${Math.max(8, x)}px`);
       player.host.style.setProperty('--shorts-launch-top', `${Math.max(8, top + (alongside ? 8 : 60))}px`);
       player.launch.hidden = Boolean(document.fullscreenElement);

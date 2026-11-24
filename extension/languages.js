@@ -66,7 +66,7 @@ const messages = {
   sv: {
     'Enable YouTube Shorts': 'Aktivera YouTube Shorts',
     'YouTube access was not granted': 'Åtkomst till YouTube beviljades inte',
-    'Voltura fullscreen': 'Helskärm med Voltura',
+    'Open in Reel Player': 'Öppna i Reel Player',
     'Shorts playback': 'Spela upp Shorts',
     'Shorts navigation and seeking': 'Navigera och spola i Shorts',
     'Previous Short': 'Föregående Short',

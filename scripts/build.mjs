@@ -9,5 +9,5 @@ await build({
   outdir: 'dist/extension',
   bundle: true,
   target: 'chrome120',
-  loader: { '.css': 'text', '.html': 'text' },
+  loader: { '.css': 'text', '.html': 'text', '.png': 'dataurl' },
 });
