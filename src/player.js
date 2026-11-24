@@ -42,10 +42,18 @@ const panKeys = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], Arro
 const themeStyles = themes.replace(/:root(\[data-skin=[^\]]+\])/g, ':host($1)');
 const playbackKeys = Object.keys(playerSettings);
 const navigationActions = ['previous', 'next', 'previous-story', 'next-story'];
+const facebookPlayer = {
+  control: reelControl,
+  liked: reelLiked,
+  metadata: reelMetadata,
+  mute: reelMuteControl,
+  volume: setReelVolume,
+};
 
 export class ReelPlayer {
-  constructor(schedule) {
+  constructor(schedule, platform = facebookPlayer) {
     this.schedule = schedule;
+    this.platform = platform;
     this.documentRoot = document.documentElement;
     this.host = document.createElement('voltura-reel-player');
     this.host.dataset.skin = defaultTheme;
@@ -58,6 +66,13 @@ export class ReelPlayer {
     this.storyFrame = this.ui.querySelector('.story-video-frame');
     this.layout = this.ui.querySelector('.player-layout');
     this.launch = this.ui.querySelector('.launch');
+    if (platform !== facebookPlayer) {
+      this.host.dataset.platform = 'youtube';
+      this.launch.removeAttribute('data-keys');
+      const brand = document.createElement('span');
+      brand.textContent = 'Voltura';
+      this.launch.append(brand);
+    }
     this.viewport = this.ui.querySelector('.viewport');
     this.dock = this.ui.querySelector('.dock');
     this.dock.dataset.width = playerSetting('dockWidth');
@@ -159,6 +174,7 @@ export class ReelPlayer {
 
   setPlaybackLabels(kind) {
     const story = kind === 'story';
+    const short = kind === 'short';
     this.stage.dataset.kind = kind;
     this.get('previous-story').hidden = !story;
     this.get('next-story').hidden = !story;
@@ -166,20 +182,21 @@ export class ReelPlayer {
     paintIcon(this.get('next'), story ? 'right' : 'next');
     paintIcon(this.get('back'), story ? 'seek-back' : 'left');
     paintIcon(this.get('forward'), story ? 'seek-forward' : 'right');
-    for (const [button, reelLabel, storyLabel] of [
-      [this.launch, 'Fullscreen reel', 'Fullscreen story'],
-      [this.get('previous'), 'Previous reel', 'Previous card'],
-      [this.get('next'), 'Next reel', 'Next card'],
+    for (const [button, reelLabel, storyLabel, shortLabel] of [
+      [this.launch, 'Fullscreen reel', 'Fullscreen story', 'Voltura fullscreen'],
+      [this.get('previous'), 'Previous reel', 'Previous card', 'Previous Short'],
+      [this.get('next'), 'Next reel', 'Next card', 'Next Short'],
     ]) {
-      this.label(button, story ? storyLabel : reelLabel);
+      this.label(button, story ? storyLabel : short ? shortLabel : reelLabel);
     }
-    for (const [element, reelLabel, storyLabel] of [
-      [this.stage, 'Reel playback', 'Story playback'],
-      [this.ui.querySelector('.fixed-controls'), 'Navigate reels and seek', 'Story navigation and seeking'],
+    for (const [element, reelLabel, storyLabel, shortLabel] of [
+      [this.stage, 'Reel playback', 'Story playback', 'Shorts playback'],
+      [this.ui.querySelector('.fixed-controls'), 'Navigate reels and seek', 'Story navigation and seeking', 'Shorts navigation and seeking'],
     ]) {
-      element.dataset.message = story ? storyLabel : reelLabel;
+      element.dataset.message = story ? storyLabel : short ? shortLabel : reelLabel;
       element.setAttribute('aria-label', this.translate(element.dataset.message));
     }
+    this.label(this.get('share'), short ? 'Share Short' : 'Share reel');
   }
 
   update(reel) {
@@ -191,6 +208,17 @@ export class ReelPlayer {
       }
       this.closeStoryVideo(false);
     }
+    const samePath = this.reel?.key === reel.key;
+    if (this.active && reel.kind === 'short' && this.reel?.kind === 'short') {
+      const sameMedia = this.media === reel.video && this.reel.card === reel.card &&
+        this.reel.wrapper === reel.wrapper && this.reel.source === reel.source;
+      // YouTube updates its address and reuses or moves its player independently.
+      if ((!samePath && sameMedia) || (this.navigating && samePath && !sameMedia)) {
+        this.waitForPlayback();
+        return false;
+      }
+    }
+    this.shortWaiting = false;
     this.storyGate = undefined;
     clearTimeout(this.mediaWaitTimer);
     this.mediaWaitTimer = undefined;
@@ -198,8 +226,7 @@ export class ReelPlayer {
       if (this.active) void this.leave();
       this.setPlaybackLabels(reel.kind);
     }
-    const samePath = this.reel?.key === reel.key;
-    const reusableVideo = reel.kind === 'story' || /^\/reels?$/.test(reel.key);
+    const reusableVideo = reel.kind !== 'reel' || /^\/reels?$/.test(reel.key);
     const media = reel.video ?? reel.photo;
     const sameFeedMedia =
       this.media === media &&
@@ -237,7 +264,11 @@ export class ReelPlayer {
         if (!this.ui.activeElement?.checkVisibility()) this.viewport.focus({ preventScroll: true });
       }
     } else {
+      const moved = this.active && reel.kind === 'short' &&
+        (reel.card !== this.reel.card || reel.wrapper !== this.reel.wrapper);
+      if (moved) this.unpinMedia();
       this.reel = { ...reel, source: reel.source || this.reel.source };
+      if (moved) this.pinMedia();
     }
     const pending = this.pendingStoryOpen;
     if (pending && (reel.kind !== 'story' || reel.key.split('/')[2] !== pending.bucket)) {
@@ -279,8 +310,13 @@ export class ReelPlayer {
       this.launch.hidden = true;
       return;
     }
-    if (this.reel.kind !== 'story' || this.mediaWaitTimer !== undefined) return;
-    // The Story viewer can remove the previous slide before the next image loads.
+    if (this.reel.kind === 'short') {
+      this.shortWaiting = true;
+      this.renderNavigation();
+      this.renderOverlay();
+    }
+    if (this.reel.kind === 'reel' || this.mediaWaitTimer !== undefined) return;
+    // The viewer can remove the previous media before the next item loads.
     this.mediaWaitTimer = setTimeout(() => {
       void this.leave();
       this.launch.hidden = true;
@@ -392,9 +428,9 @@ export class ReelPlayer {
   }
 
   setMuted(muted) {
-    const native = reelMuteControl(this.reel);
+    const native = this.platform.mute(this.reel);
     if (native) {
-      // Facebook keeps its own mute preference and uses it when playback resumes.
+      // The viewer keeps its own mute preference when playback resumes.
       this.fallbackMuted = undefined;
       if (native.muted !== muted) native.button.click();
       return;
@@ -414,8 +450,10 @@ export class ReelPlayer {
       this.path.push(element);
     }
     this.media.setAttribute(this.photo ? photoAttribute : videoAttribute, '');
+    if (this.reel.kind === 'short') this.reel.wrapper.setAttribute('data-voltura-shorts-player', '');
     if (this.video) {
       this.nativeRepeat = this.video.loop;
+      if (this.reel.kind === 'short') this.nativeRate = this.video.playbackRate;
       this.applyNativeRepeat();
       this.applyMediaPreferences();
     }
@@ -426,9 +464,14 @@ export class ReelPlayer {
     for (const element of this.path) element.removeAttribute(pathAttribute);
     this.path = [];
     if (!this.media) return;
+    if (this.reel.kind === 'short') this.reel.wrapper.removeAttribute('data-voltura-shorts-player');
     if (this.nativeRepeat !== undefined) {
       this.video.loop = this.nativeRepeat;
       this.nativeRepeat = undefined;
+    }
+    if (this.nativeRate !== undefined) {
+      this.video.playbackRate = this.nativeRate;
+      this.nativeRate = undefined;
     }
     this.media.removeAttribute(this.photo ? photoAttribute : videoAttribute);
     for (const name of ['--voltura-zoom', '--voltura-pan-x', '--voltura-pan-y'])
@@ -471,6 +514,7 @@ export class ReelPlayer {
       !this.launch.hidden &&
       target?.isConnected &&
       key === location.pathname.replace(/\/$/, '') &&
+      (!this.platform.isCurrent || this.platform.isCurrent(this.reel)) &&
       !document.fullscreenElement
     );
   }
@@ -570,6 +614,7 @@ export class ReelPlayer {
     if (!this.active) return Promise.resolve();
     if (this.linkedClip) this.closeStoryVideo(true);
     this.active = false;
+    this.shortWaiting = false;
     this.stopHold();
     this.clearNavigation();
     this.storyPauseNavigation = undefined;
@@ -665,6 +710,7 @@ export class ReelPlayer {
     const loop = this.loop;
     if (
       !this.active ||
+      this.shortWaiting ||
       !video ||
       video.paused ||
       video.seeking ||
@@ -921,8 +967,8 @@ export class ReelPlayer {
 
   navigate(action) {
     const current = this.linkedClip?.story ?? this.reel;
-    const button = reelControl(current, action);
-    if (this.navigating || !isEnabled(button)) return;
+    const button = this.platform.control(current, action);
+    if (this.navigating || !this.canUseNativeAction() || !isEnabled(button)) return;
     const keepPaused = current.kind === 'story' && (this.linkedClip ? !this.linkedClip.resumeStory : this.mediaPaused);
     if (this.linkedClip) this.closeStoryVideo(true);
     const bucket = current.storyList?.bucket ?? current.key.split('/')[2];
@@ -1013,10 +1059,23 @@ export class ReelPlayer {
     if (this.video && !this.video.paused) this.video.pause();
   }
 
-  async openFacebookAction(action) {
+  canUseNativeAction() {
+    return this.reel.kind !== 'short' || (
+      !this.shortWaiting && !this.navigating && this.video.isConnected &&
+      this.reel.key === location.pathname.replace(/\/$/, '') && this.platform.isCurrent(this.reel)
+    );
+  }
+
+  activateNative(action) {
+    if (!this.canUseNativeAction()) return;
+    const button = this.platform.control(this.reel, action);
+    if (isEnabled(button)) button.click();
+  }
+
+  async openNativePanel(action) {
     const reel = this.reel;
-    if (!isEnabled(reelControl(reel, action))) return;
-    if (action === 'comments') {
+    if (!this.canUseNativeAction() || !isEnabled(this.platform.control(reel, action))) return;
+    if (action === 'comments' && reel.kind !== 'short') {
       this.commentsState = {
         key: reel.key,
         zoom: this.zoom,
@@ -1025,8 +1084,9 @@ export class ReelPlayer {
       };
     }
     await this.leave();
-    if (this.reel.key !== reel.key) return;
-    nativeAction(this.reel, action);
+    if (!this.host.isConnected || location.pathname.replace(/\/$/, '') !== reel.key ||
+        this.reel.key !== reel.key || this.media !== (reel.video ?? reel.photo)) return;
+    this.activateNative(action);
   }
 
   async saveOnFacebook() {
@@ -1066,7 +1126,8 @@ export class ReelPlayer {
   }
 
   canSaveImage() {
-    if (!this.active || !this.media?.isConnected || this.reel.key !== location.pathname.replace(/\/$/, '')) {
+    if (!this.active || this.shortWaiting || !this.media?.isConnected ||
+        this.reel.key !== location.pathname.replace(/\/$/, '')) {
       return false;
     }
     if (!this.mediaPaused) return false;
@@ -1167,7 +1228,7 @@ export class ReelPlayer {
     for (const action of navigationActions) {
       const button = this.get(action);
       if (button.hidden) continue;
-      const disabled = this.navigating || !isEnabled(reelControl(this.reel, action));
+      const disabled = this.navigating || this.shortWaiting || !isEnabled(this.platform.control(this.reel, action));
       if (disabled !== button.disabled) button.disabled = disabled;
     }
   }
@@ -1201,7 +1262,11 @@ export class ReelPlayer {
     selectRange.disabled = this.timeline.disabled;
     repeat.disabled = !duration;
     repeat.setAttribute('aria-pressed', String(Boolean(this.repeatEnabled)));
-    const wholeVideo = this.reel.kind === 'story' ? 'Repeat whole story' : 'Repeat whole reel';
+    const wholeVideo = {
+      reel: 'Repeat whole reel',
+      short: 'Repeat whole Short',
+      story: 'Repeat whole story',
+    }[this.reel.kind];
     this.label(repeat, complete ? 'Repeat selected segment' : wholeVideo);
     band.hidden = !complete;
     readout.hidden = this.get('clear').hidden = !exists;
@@ -1286,9 +1351,12 @@ export class ReelPlayer {
     const track = Array.from(video.textTracks).find(
       (item) => item.kind === 'captions' || item.kind === 'subtitles',
     );
+    const captions = this.reel.kind === 'short' ? this.platform.control(this.reel, 'captions') : undefined;
     const cc = this.get('cc');
-    cc.hidden = !track;
-    cc.setAttribute('aria-pressed', String(track?.mode === 'showing'));
+    cc.hidden = !track && !isEnabled(captions);
+    cc.setAttribute('aria-pressed', String(isEnabled(captions)
+      ? captions.getAttribute('aria-pressed') === 'true'
+      : track?.mode === 'showing'));
     this.renderOverlay();
   }
 
@@ -1296,8 +1364,8 @@ export class ReelPlayer {
     const overlay = this.get('overlay');
     const story = this.reel.kind === 'story';
     this.setStoryActions(story && !this.linkedClip ? this.reel.storyActions : undefined);
-    overlay.hidden = story;
-    if (story) {
+    overlay.hidden = story || this.shortWaiting;
+    if (overlay.hidden) {
       this.get('social').hidden = true;
       this.get('creator').hidden = true;
       return;
@@ -1306,9 +1374,9 @@ export class ReelPlayer {
     this.label(overlay, this.hiddenOverlay ? 'Restore overlays' : 'Hide overlays');
     overlay.setAttribute('aria-pressed', String(this.hiddenOverlay));
     this.get('social').hidden = this.hiddenOverlay;
-    const { owner, profile, photo, follow, followControl, caption, more } = reelMetadata(this.reel);
+    const { owner, profile, photo, follow, followControl, caption, more } = this.platform.metadata(this.reel);
     this.captionSource = more;
-    this.get('creator').hidden = this.hiddenOverlay || !(owner || caption.text);
+    this.get('creator').hidden = this.hiddenOverlay || !(owner || caption.text || follow);
     this.get('owner').parentElement.hidden = !owner;
     if (this.get('creator-name').textContent !== owner) this.get('creator-name').textContent = owner;
     if (profile && this.get('owner').getAttribute('href') !== profile) this.get('owner').href = profile;
@@ -1336,7 +1404,7 @@ export class ReelPlayer {
     const disclosureText = this.translate(expanded ? 'See less' : 'See more');
     if (disclosure.textContent !== disclosureText) disclosure.textContent = disclosureText;
     for (const action of ['like', 'comments', 'share', 'save', 'more']) {
-      const native = reelControl(this.reel, action === 'save' ? 'more' : action);
+      const native = this.platform.control(this.reel, action === 'save' ? 'more' : action);
       const button = this.get(action);
       button.hidden = !isEnabled(native);
       if (['like', 'comments', 'share'].includes(action)) {
@@ -1352,9 +1420,11 @@ export class ReelPlayer {
         } else number?.remove();
       }
       if (action === 'like') {
-        const liked = reelLiked(native);
+        const liked = this.platform.liked(native);
         button.setAttribute('aria-pressed', String(liked));
-        this.label(button, 'Like reel', liked ? 'Unlike reel' : 'Like reel');
+        const short = this.reel.kind === 'short';
+        const like = short ? 'Like Short' : 'Like reel';
+        this.label(button, like, liked ? (short ? 'Unlike Short' : 'Unlike reel') : like);
       }
     }
   }
@@ -1476,13 +1546,18 @@ export class ReelPlayer {
     this.closePopovers();
     this.setMenu(id, trigger, open);
     if (open && id === 'volume-popover') {
-      reelMuteControl(this.reel)?.button.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      this.platform.mute(this.reel)?.button.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
     }
     if (open) this.get(id).querySelector('[aria-pressed="true"],input')?.focus();
     this.reveal();
   }
 
   setCaptions() {
+    if (this.reel.kind === 'short' && isEnabled(this.platform.control(this.reel, 'captions'))) {
+      this.activateNative('captions');
+      this.schedule();
+      return;
+    }
     const tracks = Array.from(this.video.textTracks).filter(
       (track) => track.kind === 'captions' || track.kind === 'subtitles',
     );
@@ -1522,15 +1597,23 @@ export class ReelPlayer {
     click('zoom-in', () => this.zoomAt(this.zoom * 1.25));
     click('zoom-reset', () => this.zoomAt(1));
     for (const action of navigationActions) click(action, () => this.navigate(action));
-    click('like', () => nativeAction(this.reel, 'like'));
+    click('like', () => {
+      if (this.reel.kind === 'short' && !this.platform.canLikeInFullscreen())
+        void this.openNativePanel('like');
+      else this.activateNative('like');
+    });
     click('creator-follow', () => {
-      const { followControl } = reelMetadata(this.reel);
+      if (this.reel.kind === 'short') {
+        void this.openNativePanel('subscribe');
+        return;
+      }
+      const { followControl } = this.platform.metadata(this.reel);
       if (isEnabled(followControl)) followControl.click();
       this.renderOverlay();
     });
     click('save', () => void this.saveOnFacebook());
     for (const action of ['comments', 'share', 'more'])
-      click(action, () => void this.openFacebookAction(action));
+      click(action, () => void this.openNativePanel(action));
     click('cc', () => this.setCaptions());
     click('caption-more', () => {
       this.captionExpanded = !this.captionExpanded;
@@ -1572,7 +1655,7 @@ export class ReelPlayer {
     });
     this.on(this.get('volume'), 'change', () => {
       // Facebook's slider updates its own preference as well as the media element.
-      if (this.volume > 0) setReelVolume(this.reel, this.volume);
+      if (this.volume > 0) this.platform.volume?.(this.reel, this.volume);
     });
     this.on(this.stage, 'pointerdown', (event) => {
       this.stage.classList.add('pointer-controls');
@@ -1601,7 +1684,7 @@ export class ReelPlayer {
           !event.target.closest(`[${storyActionAttribute}="share"]`)) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      void this.openFacebookAction('share');
+      void this.openNativePanel('share');
     }, { capture: true });
     this.on(document, 'fullscreenchange', () => {
       if (document.fullscreenElement === this.documentRoot) this.browserFullscreen = true;
@@ -1868,13 +1951,14 @@ export class ReelPlayer {
           if (action === 'share') {
             event.preventDefault();
             event.stopImmediatePropagation();
-            if (!event.repeat) void this.openFacebookAction('share');
+            if (!event.repeat) void this.openNativePanel('share');
           }
           if (action) return;
         }
         if (key === 'f' && !event.altKey && !event.shiftKey) {
           if (editable && !(this.active && focus?.matches('input[type="range"]'))) return;
           if (!this.active) {
+            if (this.reel?.kind === 'short') return;
             if (!this.canEnter()) return;
             const dialogs = document.querySelectorAll('dialog[open], [role="dialog"][aria-modal="true"]');
             const blocked = Array.from(dialogs).some(

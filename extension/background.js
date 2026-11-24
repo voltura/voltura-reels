@@ -1,5 +1,6 @@
 import { defaultTheme, iconFilters, themeKey, validTheme } from './preferences.js';
-import { cropStoryPhoto, facebookPlaybackPage, frameDownload, storyPhotoDownload } from './story-photo.js';
+import { cropStoryPhoto, frameDownload, imageDownloadPage, storyPhotoDownload } from './story-photo.js';
+import { shortsPermission, syncShortsAccess, syncShortsMessage } from './shorts-access.js';
 
 const sizes = [16, 24, 32];
 
@@ -38,17 +39,40 @@ function refreshIcon() {
 
 chrome.runtime.onInstalled.addListener(refreshIcon);
 chrome.runtime.onStartup.addListener(refreshIcon);
+
+let shortsSync = Promise.resolve();
+function refreshShortsAccess() {
+  shortsSync = shortsSync.catch(() => {}).then(() => syncShortsAccess());
+  return shortsSync;
+}
+
+function reconcileShortsAccess() {
+  void refreshShortsAccess().catch((error) => console.warn('Could not update YouTube Shorts access', error));
+}
+
+function shortsPermissionChanged({ origins }) {
+  if (origins?.includes(shortsPermission.origins[0])) reconcileShortsAccess();
+}
+
+chrome.runtime.onInstalled.addListener(reconcileShortsAccess);
+chrome.runtime.onStartup.addListener(reconcileShortsAccess);
+chrome.permissions.onAdded.addListener(shortsPermissionChanged);
+chrome.permissions.onRemoved.addListener(shortsPermissionChanged);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && Object.hasOwn(changes, themeKey)) refreshIcon();
 });
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.type === syncShortsMessage && sender.url === chrome.runtime.getURL('settings.html')) {
+    refreshShortsAccess().then(respond, () => respond(null));
+    return true;
+  }
   if (message?.type === 'crop-story-photo') {
     cropStoryPhoto(message, sender).then(respond, () => respond(null));
     return true;
   }
   if (message?.type === 'image-download-status') {
-    if (!facebookPlaybackPage(sender) || !Number.isInteger(message.id)) return;
+    if (!imageDownloadPage(sender) || !Number.isInteger(message.id)) return;
     chrome.downloads.search({ id: message.id }).then(
       ([item]) => respond(item?.byExtensionId === chrome.runtime.id ? item.state : null),
       () => respond(null),
