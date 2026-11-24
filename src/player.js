@@ -1,10 +1,12 @@
 import markup from './player.html';
 import css from './player.css';
 import pageStyles from '../extension/facebook.css';
+import launchIcon from '../extension/icons/32.png';
 import themes from '../extension/themes.css';
 import {
   defaultTheme,
   formatPlaybackRate,
+  iconFilters,
   playbackRates,
   playerSetting,
   playerSettings,
@@ -66,12 +68,11 @@ export class ReelPlayer {
     this.storyFrame = this.ui.querySelector('.story-video-frame');
     this.layout = this.ui.querySelector('.player-layout');
     this.launch = this.ui.querySelector('.launch');
+    this.launchIcon = this.launch.querySelector('img');
+    this.launchIcon.src = launchIcon;
     if (platform !== facebookPlayer) {
       this.host.dataset.platform = 'youtube';
       this.launch.removeAttribute('data-keys');
-      const brand = document.createElement('span');
-      brand.textContent = 'Voltura';
-      this.launch.append(brand);
     }
     this.viewport = this.ui.querySelector('.viewport');
     this.dock = this.ui.querySelector('.dock');
@@ -130,7 +131,9 @@ export class ReelPlayer {
   }
 
   setTheme(theme) {
-    this.host.dataset.skin = validTheme(theme);
+    const skin = validTheme(theme);
+    this.host.dataset.skin = skin;
+    this.launchIcon.style.filter = iconFilters[skin] ?? 'none';
   }
 
   setPlayerSetting(key, value) {
@@ -183,7 +186,7 @@ export class ReelPlayer {
     paintIcon(this.get('back'), story ? 'seek-back' : 'left');
     paintIcon(this.get('forward'), story ? 'seek-forward' : 'right');
     for (const [button, reelLabel, storyLabel, shortLabel] of [
-      [this.launch, 'Fullscreen reel', 'Fullscreen story', 'Voltura fullscreen'],
+      [this.launch, 'Fullscreen reel', 'Fullscreen story', 'Open in Reel Player'],
       [this.get('previous'), 'Previous reel', 'Previous card', 'Previous Short'],
       [this.get('next'), 'Next reel', 'Next card', 'Next Short'],
     ]) {
@@ -587,7 +590,7 @@ export class ReelPlayer {
     this.volume = undefined;
     this.requestedTime = undefined;
     this.active = true;
-    this.documentRoot.setAttribute(fullscreenAttribute, '');
+    this.documentRoot.setAttribute(fullscreenAttribute, this.reel.kind === 'short' ? 'short' : '');
     this.launch.hidden = true;
     this.stage.hidden = false;
     this.ui.querySelector('.launch-notice').hidden = true;

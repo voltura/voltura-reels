@@ -18,7 +18,7 @@ Watch Facebook Reels, photo and video Stories, and YouTube Shorts fullscreen in 
 
 ### Facebook
 
-Open a Facebook reel or Story and select the fullscreen button or press **F**. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **F** again or press **Esc** to leave fullscreen.
+Open a Facebook reel or Story and select the **Reel Player icon** or press **F**. Move the pointer to reveal the controls. Hover over a button to see its keyboard shortcuts. Press **F** again or press **Esc** to leave fullscreen.
 
 The Story viewer keeps Facebook’s progress bars. Use **‹** and **›** to move between cards or **|‹** and **›|** to switch Stories. Switching Stories starts on the first card. A paused Story stays paused when you navigate.
 
@@ -28,7 +28,7 @@ Pause on the image you want, then click **Save image** or press **S**. This save
 
 ### YouTube Shorts
 
-Shorts support requires **1.2.0 or later**. Open Voltura Reel Player from the Chrome toolbar, select **Enable YouTube Shorts**, and approve YouTube access once. Open a Short and select **Voltura fullscreen** beside the player. Press **Esc** to return to YouTube. Outside Voltura fullscreen, **F** opens YouTube’s fullscreen viewer.
+Shorts support requires **1.2.0 or later**. Open Voltura Reel Player from the Chrome toolbar, select **Enable YouTube Shorts**, and approve YouTube access once. Open a Short and select the **Reel Player icon** beside the player. Press **Esc** to return to YouTube. Outside Reel Player fullscreen, **F** opens YouTube’s fullscreen viewer.
 
 Seek, adjust speed, loop a segment, zoom, or move between Shorts in fullscreen. Captions, paused-frame saving, and Like, Comments, Share, and Subscribe are available when supported by the Short. YouTube handles its own dialogs. You can turn off Shorts access from the same popup.
 
