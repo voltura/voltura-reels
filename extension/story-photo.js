@@ -1,4 +1,5 @@
 import { refineStoryCrop } from './story-crop.js';
+import { shortsPath } from './shorts-access.js';
 
 const facebookOrigin = /^https:\/\/(?:www\.)?facebook\.com$/;
 
@@ -27,6 +28,14 @@ export function storyPhotoDownload(source, sender) {
     ...(extension && { filename: `facebook-story.${extension.toLowerCase()}` }),
     conflictAction: 'uniquify',
   };
+}
+
+export function imageDownloadPage(sender) {
+  const facebook = facebookPlaybackPage(sender);
+  if (facebook) return facebook;
+  if (sender.frameId !== 0 || !URL.canParse(sender.url)) return null;
+  const page = new URL(sender.url);
+  return shortsPath(page) ? { page, kind: 'short' } : null;
 }
 
 export async function cropStoryPhoto({ source, crop }, sender) {
@@ -75,7 +84,7 @@ export async function cropStoryPhoto({ source, crop }, sender) {
 }
 
 export function frameDownload({ type, source, time }, sender) {
-  const view = facebookPlaybackPage(sender);
+  const view = imageDownloadPage(sender);
   if (!view || typeof source !== 'string') return null;
   const prefix = `blob:${view.page.origin}/`;
   if (!source.startsWith(prefix) || !/^[a-f\d-]{36}$/i.test(source.slice(prefix.length))) return null;

@@ -64,6 +64,17 @@ export function translator(locale) {
 
 const messages = {
   sv: {
+    'Enable YouTube Shorts': 'Aktivera YouTube Shorts',
+    'YouTube access was not granted': 'Åtkomst till YouTube beviljades inte',
+    'Voltura fullscreen': 'Helskärm med Voltura',
+    'Shorts playback': 'Spela upp Shorts',
+    'Shorts navigation and seeking': 'Navigera och spola i Shorts',
+    'Previous Short': 'Föregående Short',
+    'Next Short': 'Nästa Short',
+    'Repeat whole Short': 'Upprepa hela klippet',
+    'Like Short': 'Gilla Short',
+    'Unlike Short': 'Ta bort gilla-markering',
+    'Share Short': 'Dela Short',
     'See more': 'Visa mer',
     'See less': 'Visa mindre',
     'Repeat selected segment': 'Upprepa valt avsnitt',

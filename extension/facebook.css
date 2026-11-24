@@ -113,3 +113,13 @@ html[data-voltura-reel-fullscreen] :is([data-voltura-reel-video], [data-voltura-
   pointer-events: none !important;
   z-index: 2147483645 !important;
 }
+
+html[data-voltura-reel-fullscreen] [data-voltura-shorts-player] .ytp-caption-window-container {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  z-index: 2147483646 !important;
+}

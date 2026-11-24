@@ -8,6 +8,7 @@ import {
   validTheme,
 } from './preferences.js';
 import { languageKey, languages, resolveLanguage, translator } from './languages.js';
+import { shortsEnabled, shortsPermission, syncShortsMessage } from './shorts-access.js';
 
 const select = document.querySelector('#theme');
 const status = document.querySelector('#status');
@@ -180,5 +181,34 @@ select.addEventListener('change', async () => {
   } finally {
     select.disabled = false;
     select.focus();
+  }
+});
+
+const shorts = document.querySelector('#enable-shorts');
+try {
+  const stored = await chrome.storage.local.get(shortsEnabled);
+  shorts.checked = Boolean(stored[shortsEnabled]) && await chrome.permissions.contains(shortsPermission);
+  shorts.disabled = false;
+} catch {
+  setStatus('Settings unavailable');
+}
+
+shorts.addEventListener('change', async () => {
+  const enable = shorts.checked;
+  shorts.disabled = true;
+  setStatus();
+  try {
+    const changed = enable
+      ? await chrome.permissions.request(shortsPermission)
+      : await chrome.permissions.remove(shortsPermission);
+    const enabled = await chrome.runtime.sendMessage({ type: syncShortsMessage });
+    if (typeof enabled !== 'boolean') throw new Error('Could not apply Shorts access');
+    shorts.checked = enabled;
+    if (!changed && enable && !enabled) setStatus('YouTube access was not granted');
+  } catch {
+    shorts.checked = !enable;
+    setStatus('Could not save settings');
+  } finally {
+    shorts.disabled = false;
   }
 });

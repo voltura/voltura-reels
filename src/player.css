@@ -730,6 +730,22 @@ svg {
   width: 45%;
   height: 45%;
 }
+:host([data-platform='youtube']) .launch {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  top: var(--shorts-launch-top, 76px);
+  left: var(--shorts-launch-left, 12px);
+  width: 84px;
+  height: 36px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 650;
+}
+:host([data-platform='youtube']) .launch svg {
+  width: 15px;
+  height: 15px;
+}
 .launch:is(:hover, :focus-visible) {
   background: var(--theme-raised);
   border-color: var(--theme-accent);

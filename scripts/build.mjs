@@ -5,8 +5,8 @@ mkdirSync('dist', { recursive: true });
 rmSync('dist/extension', { recursive: true, force: true });
 cpSync('extension', 'dist/extension', { recursive: true });
 await build({
-  entryPoints: ['src/content.js'],
-  outfile: 'dist/extension/content.js',
+  entryPoints: { content: 'src/content.js', shorts: 'src/shorts-content.js' },
+  outdir: 'dist/extension',
   bundle: true,
   target: 'chrome120',
   loader: { '.css': 'text', '.html': 'text' },
