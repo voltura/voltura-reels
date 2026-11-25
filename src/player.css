@@ -203,7 +203,7 @@ svg {
   right: calc(100% + 7px);
   transform: translateY(50%);
 }
-#like[aria-pressed='true'] svg {
+:is(#like, #dislike)[aria-pressed='true'] svg {
   fill: currentColor;
 }
 .creator {
@@ -369,6 +369,9 @@ svg {
 }
 .navigation-controls {
   grid-template-columns: repeat(4, var(--step-width));
+}
+.stage[data-kind='video'] .navigation-controls {
+  display: none;
 }
 .seek-controls {
   grid-template-columns: repeat(2, var(--step-width));
@@ -727,8 +730,8 @@ svg {
   border-radius: 50%;
 }
 :host([data-platform='youtube']) .launch {
-  top: var(--shorts-launch-top, 76px);
-  left: var(--shorts-launch-left, 12px);
+  top: var(--youtube-launch-top, 76px);
+  left: var(--youtube-launch-left, 12px);
   width: 36px;
   height: 36px;
 }

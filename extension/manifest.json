@@ -3,7 +3,7 @@
   "name": "Voltura Reel Player",
   "version": "1.2.0",
   "minimum_chrome_version": "120",
-  "description": "Watch Facebook Reels, Facebook Stories, and YouTube Shorts fullscreen with precise playback controls.",
+  "description": "Watch Facebook Reels and Stories, and YouTube videos and Shorts fullscreen with precise playback controls.",
   "homepage_url": "https://reels.voltura.se/",
   "permissions": ["storage", "downloads", "scripting"],
   "host_permissions": ["https://www.facebook.com/*", "https://facebook.com/*", "https://*.fbcdn.net/*"],

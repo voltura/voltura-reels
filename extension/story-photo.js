@@ -1,5 +1,5 @@
 import { refineStoryCrop } from './story-crop.js';
-import { shortsPath } from './shorts-access.js';
+import { shortsPath, watchPath } from './shorts-access.js';
 
 const facebookOrigin = /^https:\/\/(?:www\.)?facebook\.com$/;
 
@@ -35,7 +35,8 @@ export function imageDownloadPage(sender) {
   if (facebook) return facebook;
   if (sender.frameId !== 0 || !URL.canParse(sender.url)) return null;
   const page = new URL(sender.url);
-  return shortsPath(page) ? { page, kind: 'short' } : null;
+  if (shortsPath(page)) return { page, kind: 'short' };
+  return watchPath(page) ? { page, kind: 'video' } : null;
 }
 
 export async function cropStoryPhoto({ source, crop }, sender) {

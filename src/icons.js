@@ -15,6 +15,7 @@ const icons = {
     '<path d="M4 7h4l2-3h4l2 3h4a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/>',
   up: '<path d="m6 15 6-6 6 6"/>',
   like: '<path d="M7 10h-4v10h4m0-10 4-7c2 0 3.5 1.4 3 4l-.5 3H19a2 2 0 0 1 2 2l-1.5 6a2 2 0 0 1-2 2H7Z"/>',
+  dislike: '<path d="M17 14h4V4h-4m0 10-4 7c-2 0-3.5-1.4-3-4l.5-3H5a2 2 0 0 1-2-2l1.5-6a2 2 0 0 1 2-2H17Z"/>',
   message: '<path d="M20 15.6a8.5 8.5 0 1 0-3.5 3.5L21 21l-1-5.4Z"/>',
   bookmark: '<path d="M6 4h12v17l-6-4-6 4V4Z"/>',
   play: '<path d="m8 5 12 7-12 7V5Z"/>',

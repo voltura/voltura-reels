@@ -115,7 +115,7 @@ html[data-voltura-reel-fullscreen] :is([data-voltura-reel-video], [data-voltura-
 }
 
 /* YouTube can show its own thumbnail or end screen behind the pinned video. */
-html[data-voltura-reel-fullscreen='short']::before {
+html:is([data-voltura-reel-fullscreen='short'], [data-voltura-reel-fullscreen='video'])::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -124,12 +124,12 @@ html[data-voltura-reel-fullscreen='short']::before {
   z-index: 2147483644;
 }
 
-html[data-voltura-reel-fullscreen='short'] [data-voltura-reel-video] {
+html:is([data-voltura-reel-fullscreen='short'], [data-voltura-reel-fullscreen='video']) [data-voltura-reel-video] {
   display: block !important;
   opacity: 1 !important;
 }
 
-html[data-voltura-reel-fullscreen] [data-voltura-shorts-player] .ytp-caption-window-container {
+html[data-voltura-reel-fullscreen] [data-voltura-youtube-player] .ytp-caption-window-container {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;

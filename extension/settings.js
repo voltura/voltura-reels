@@ -202,7 +202,7 @@ shorts.addEventListener('change', async () => {
       ? await chrome.permissions.request(shortsPermission)
       : await chrome.permissions.remove(shortsPermission);
     const enabled = await chrome.runtime.sendMessage({ type: syncShortsMessage });
-    if (typeof enabled !== 'boolean') throw new Error('Could not apply Shorts access');
+    if (typeof enabled !== 'boolean') throw new Error('Could not apply YouTube access');
     shorts.checked = enabled;
     if (!changed && enable && !enabled) setStatus('YouTube access was not granted');
   } catch {
