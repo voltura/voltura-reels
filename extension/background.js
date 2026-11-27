@@ -47,7 +47,7 @@ function refreshShortsAccess() {
 }
 
 function reconcileShortsAccess() {
-  void refreshShortsAccess().catch((error) => console.warn('Could not update YouTube Shorts access', error));
+  void refreshShortsAccess().catch((error) => console.warn('Could not update YouTube access', error));
 }
 
 function shortsPermissionChanged({ origins }) {

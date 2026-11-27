@@ -64,9 +64,17 @@ export function translator(locale) {
 
 const messages = {
   sv: {
-    'Enable YouTube Shorts': 'Aktivera YouTube Shorts',
+    'Enable YouTube': 'Aktivera YouTube',
     'YouTube access was not granted': 'Åtkomst till YouTube beviljades inte',
-    'Open in Reel Player': 'Öppna i Reel Player',
+    'Open in Voltura Reel Player': 'Öppna i Voltura Reel Player',
+    'Video playback': 'Spela upp video',
+    'Seek video': 'Spola i videon',
+    'Repeat whole video': 'Upprepa hela videon',
+    'Like video': 'Gilla videon',
+    'Unlike video': 'Ta bort gilla-markering',
+    'Dislike video': 'Ogilla videon',
+    'Remove dislike': 'Ta bort ogilla-markering',
+    'Share video': 'Dela videon',
     'Shorts playback': 'Spela upp Shorts',
     'Shorts navigation and seeking': 'Navigera och spola i Shorts',
     'Previous Short': 'Föregående Short',

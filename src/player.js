@@ -56,6 +56,7 @@ export class ReelPlayer {
   constructor(schedule, platform = facebookPlayer) {
     this.schedule = schedule;
     this.platform = platform;
+    this.isYouTube = platform !== facebookPlayer;
     this.documentRoot = document.documentElement;
     this.host = document.createElement('voltura-reel-player');
     this.host.dataset.skin = defaultTheme;
@@ -70,10 +71,7 @@ export class ReelPlayer {
     this.launch = this.ui.querySelector('.launch');
     this.launchIcon = this.launch.querySelector('img');
     this.launchIcon.src = launchIcon;
-    if (platform !== facebookPlayer) {
-      this.host.dataset.platform = 'youtube';
-      this.launch.removeAttribute('data-keys');
-    }
+    if (this.isYouTube) this.host.dataset.platform = 'youtube';
     this.viewport = this.ui.querySelector('.viewport');
     this.dock = this.ui.querySelector('.dock');
     this.dock.dataset.width = playerSetting('dockWidth');
@@ -178,7 +176,9 @@ export class ReelPlayer {
   setPlaybackLabels(kind) {
     const story = kind === 'story';
     const short = kind === 'short';
+    const video = kind === 'video';
     this.stage.dataset.kind = kind;
+    this.get('previous').hidden = this.get('next').hidden = video;
     this.get('previous-story').hidden = !story;
     this.get('next-story').hidden = !story;
     paintIcon(this.get('previous'), story ? 'left' : 'previous');
@@ -186,20 +186,20 @@ export class ReelPlayer {
     paintIcon(this.get('back'), story ? 'seek-back' : 'left');
     paintIcon(this.get('forward'), story ? 'seek-forward' : 'right');
     for (const [button, reelLabel, storyLabel, shortLabel] of [
-      [this.launch, 'Fullscreen reel', 'Fullscreen story', 'Open in Reel Player'],
       [this.get('previous'), 'Previous reel', 'Previous card', 'Previous Short'],
       [this.get('next'), 'Next reel', 'Next card', 'Next Short'],
     ]) {
       this.label(button, story ? storyLabel : short ? shortLabel : reelLabel);
     }
-    for (const [element, reelLabel, storyLabel, shortLabel] of [
-      [this.stage, 'Reel playback', 'Story playback', 'Shorts playback'],
-      [this.ui.querySelector('.fixed-controls'), 'Navigate reels and seek', 'Story navigation and seeking', 'Shorts navigation and seeking'],
+    this.label(this.launch, this.isYouTube ? 'Open in Voltura Reel Player' : story ? 'Fullscreen story' : 'Fullscreen reel');
+    for (const [element, reelLabel, storyLabel, shortLabel, videoLabel] of [
+      [this.stage, 'Reel playback', 'Story playback', 'Shorts playback', 'Video playback'],
+      [this.ui.querySelector('.fixed-controls'), 'Navigate reels and seek', 'Story navigation and seeking', 'Shorts navigation and seeking', 'Seek video'],
     ]) {
-      element.dataset.message = story ? storyLabel : short ? shortLabel : reelLabel;
+      element.dataset.message = story ? storyLabel : short ? shortLabel : video ? videoLabel : reelLabel;
       element.setAttribute('aria-label', this.translate(element.dataset.message));
     }
-    this.label(this.get('share'), short ? 'Share Short' : 'Share reel');
+    this.label(this.get('share'), short ? 'Share Short' : video ? 'Share video' : 'Share reel');
   }
 
   update(reel) {
@@ -221,7 +221,7 @@ export class ReelPlayer {
         return false;
       }
     }
-    this.shortWaiting = false;
+    this.youtubeWaiting = false;
     this.storyGate = undefined;
     clearTimeout(this.mediaWaitTimer);
     this.mediaWaitTimer = undefined;
@@ -267,7 +267,7 @@ export class ReelPlayer {
         if (!this.ui.activeElement?.checkVisibility()) this.viewport.focus({ preventScroll: true });
       }
     } else {
-      const moved = this.active && reel.kind === 'short' &&
+      const moved = this.active && this.isYouTube &&
         (reel.card !== this.reel.card || reel.wrapper !== this.reel.wrapper);
       if (moved) this.unpinMedia();
       this.reel = { ...reel, source: reel.source || this.reel.source };
@@ -313,8 +313,8 @@ export class ReelPlayer {
       this.launch.hidden = true;
       return;
     }
-    if (this.reel.kind === 'short') {
-      this.shortWaiting = true;
+    if (this.isYouTube) {
+      this.youtubeWaiting = true;
       this.renderNavigation();
       this.renderOverlay();
     }
@@ -453,10 +453,10 @@ export class ReelPlayer {
       this.path.push(element);
     }
     this.media.setAttribute(this.photo ? photoAttribute : videoAttribute, '');
-    if (this.reel.kind === 'short') this.reel.wrapper.setAttribute('data-voltura-shorts-player', '');
+    if (this.isYouTube) this.reel.wrapper.setAttribute('data-voltura-youtube-player', '');
     if (this.video) {
       this.nativeRepeat = this.video.loop;
-      if (this.reel.kind === 'short') this.nativeRate = this.video.playbackRate;
+      if (this.isYouTube) this.nativeRate = this.video.playbackRate;
       this.applyNativeRepeat();
       this.applyMediaPreferences();
     }
@@ -467,7 +467,7 @@ export class ReelPlayer {
     for (const element of this.path) element.removeAttribute(pathAttribute);
     this.path = [];
     if (!this.media) return;
-    if (this.reel.kind === 'short') this.reel.wrapper.removeAttribute('data-voltura-shorts-player');
+    if (this.isYouTube) this.reel.wrapper.removeAttribute('data-voltura-youtube-player');
     if (this.nativeRepeat !== undefined) {
       this.video.loop = this.nativeRepeat;
       this.nativeRepeat = undefined;
@@ -508,6 +508,13 @@ export class ReelPlayer {
     this.progress.style.setProperty('--voltura-story-progress-width', `${progressWidth}px`);
   }
 
+  matchesPlaybackKey(key) {
+    const current = this.platform.playbackKey
+      ? this.platform.playbackKey(location)
+      : location.pathname.replace(/\/$/, '');
+    return key === current;
+  }
+
   canEnter() {
     const target = this.storyGate?.card ?? this.media;
     const key = this.storyGate?.key ?? this.reel?.key;
@@ -516,7 +523,7 @@ export class ReelPlayer {
       !this.pendingStoryOpen &&
       !this.launch.hidden &&
       target?.isConnected &&
-      key === location.pathname.replace(/\/$/, '') &&
+      this.matchesPlaybackKey(key) &&
       (!this.platform.isCurrent || this.platform.isCurrent(this.reel)) &&
       !document.fullscreenElement
     );
@@ -590,7 +597,7 @@ export class ReelPlayer {
     this.volume = undefined;
     this.requestedTime = undefined;
     this.active = true;
-    this.documentRoot.setAttribute(fullscreenAttribute, this.reel.kind === 'short' ? 'short' : '');
+    this.documentRoot.setAttribute(fullscreenAttribute, this.isYouTube ? this.reel.kind : '');
     this.launch.hidden = true;
     this.stage.hidden = false;
     this.ui.querySelector('.launch-notice').hidden = true;
@@ -617,7 +624,7 @@ export class ReelPlayer {
     if (!this.active) return Promise.resolve();
     if (this.linkedClip) this.closeStoryVideo(true);
     this.active = false;
-    this.shortWaiting = false;
+    this.youtubeWaiting = false;
     this.stopHold();
     this.clearNavigation();
     this.storyPauseNavigation = undefined;
@@ -713,7 +720,7 @@ export class ReelPlayer {
     const loop = this.loop;
     if (
       !this.active ||
-      this.shortWaiting ||
+      this.youtubeWaiting ||
       !video ||
       video.paused ||
       video.seeking ||
@@ -1063,22 +1070,24 @@ export class ReelPlayer {
   }
 
   canUseNativeAction() {
-    return this.reel.kind !== 'short' || (
-      !this.shortWaiting && !this.navigating && this.video.isConnected &&
-      this.reel.key === location.pathname.replace(/\/$/, '') && this.platform.isCurrent(this.reel)
+    return !this.isYouTube || (
+      !this.youtubeWaiting && !this.navigating && this.video.isConnected &&
+      this.matchesPlaybackKey(this.reel.key) && this.platform.isCurrent(this.reel)
     );
   }
 
   activateNative(action) {
     if (!this.canUseNativeAction()) return;
     const button = this.platform.control(this.reel, action);
-    if (isEnabled(button)) button.click();
+    if (!isEnabled(button)) return;
+    if (this.platform.activate) this.platform.activate(button);
+    else button.click();
   }
 
   async openNativePanel(action) {
     const reel = this.reel;
     if (!this.canUseNativeAction() || !isEnabled(this.platform.control(reel, action))) return;
-    if (action === 'comments' && reel.kind !== 'short') {
+    if (action === 'comments' && !this.isYouTube) {
       this.commentsState = {
         key: reel.key,
         zoom: this.zoom,
@@ -1087,7 +1096,7 @@ export class ReelPlayer {
       };
     }
     await this.leave();
-    if (!this.host.isConnected || location.pathname.replace(/\/$/, '') !== reel.key ||
+    if (!this.host.isConnected || !this.matchesPlaybackKey(reel.key) ||
         this.reel.key !== reel.key || this.media !== (reel.video ?? reel.photo)) return;
     this.activateNative(action);
   }
@@ -1129,8 +1138,8 @@ export class ReelPlayer {
   }
 
   canSaveImage() {
-    if (!this.active || this.shortWaiting || !this.media?.isConnected ||
-        this.reel.key !== location.pathname.replace(/\/$/, '')) {
+    if (!this.active || !this.media?.isConnected || !this.matchesPlaybackKey(this.reel.key) ||
+        (this.isYouTube && !this.canUseNativeAction())) {
       return false;
     }
     if (!this.mediaPaused) return false;
@@ -1231,7 +1240,7 @@ export class ReelPlayer {
     for (const action of navigationActions) {
       const button = this.get(action);
       if (button.hidden) continue;
-      const disabled = this.navigating || this.shortWaiting || !isEnabled(this.platform.control(this.reel, action));
+      const disabled = this.navigating || this.youtubeWaiting || !isEnabled(this.platform.control(this.reel, action));
       if (disabled !== button.disabled) button.disabled = disabled;
     }
   }
@@ -1269,6 +1278,7 @@ export class ReelPlayer {
       reel: 'Repeat whole reel',
       short: 'Repeat whole Short',
       story: 'Repeat whole story',
+      video: 'Repeat whole video',
     }[this.reel.kind];
     this.label(repeat, complete ? 'Repeat selected segment' : wholeVideo);
     band.hidden = !complete;
@@ -1354,7 +1364,7 @@ export class ReelPlayer {
     const track = Array.from(video.textTracks).find(
       (item) => item.kind === 'captions' || item.kind === 'subtitles',
     );
-    const captions = this.reel.kind === 'short' ? this.platform.control(this.reel, 'captions') : undefined;
+    const captions = this.isYouTube ? this.platform.control(this.reel, 'captions') : undefined;
     const cc = this.get('cc');
     cc.hidden = !track && !isEnabled(captions);
     cc.setAttribute('aria-pressed', String(isEnabled(captions)
@@ -1367,7 +1377,7 @@ export class ReelPlayer {
     const overlay = this.get('overlay');
     const story = this.reel.kind === 'story';
     this.setStoryActions(story && !this.linkedClip ? this.reel.storyActions : undefined);
-    overlay.hidden = story || this.shortWaiting;
+    overlay.hidden = story || this.youtubeWaiting;
     if (overlay.hidden) {
       this.get('social').hidden = true;
       this.get('creator').hidden = true;
@@ -1406,12 +1416,12 @@ export class ReelPlayer {
     disclosure.setAttribute('aria-expanded', String(expanded));
     const disclosureText = this.translate(expanded ? 'See less' : 'See more');
     if (disclosure.textContent !== disclosureText) disclosure.textContent = disclosureText;
-    for (const action of ['like', 'comments', 'share', 'save', 'more']) {
+    for (const action of ['like', 'dislike', 'comments', 'share', 'save', 'more']) {
       const native = this.platform.control(this.reel, action === 'save' ? 'more' : action);
       const button = this.get(action);
       button.hidden = !isEnabled(native);
       if (['like', 'comments', 'share'].includes(action)) {
-        const count = native?.textContent.trim();
+        const count = native?.localName !== 'ytd-comments' && native?.textContent.trim();
         let number = button.querySelector('.count');
         if (count && /^\d[\d\s.,]*\s*[\p{L}]*$/u.test(count)) {
           if (!number) {
@@ -1425,9 +1435,14 @@ export class ReelPlayer {
       if (action === 'like') {
         const liked = this.platform.liked(native);
         button.setAttribute('aria-pressed', String(liked));
-        const short = this.reel.kind === 'short';
-        const like = short ? 'Like Short' : 'Like reel';
-        this.label(button, like, liked ? (short ? 'Unlike Short' : 'Unlike reel') : like);
+        const subject = { short: 'Short', video: 'video' }[this.reel.kind] ?? 'reel';
+        const label = `Like ${subject}`;
+        this.label(button, label, liked ? `Unlike ${subject}` : label);
+      }
+      if (action === 'dislike') {
+        const disliked = this.platform.liked(native);
+        button.setAttribute('aria-pressed', String(disliked));
+        this.label(button, 'Dislike video', disliked ? 'Remove dislike' : 'Dislike video');
       }
     }
   }
@@ -1556,7 +1571,7 @@ export class ReelPlayer {
   }
 
   setCaptions() {
-    if (this.reel.kind === 'short' && isEnabled(this.platform.control(this.reel, 'captions'))) {
+    if (this.isYouTube && isEnabled(this.platform.control(this.reel, 'captions'))) {
       this.activateNative('captions');
       this.schedule();
       return;
@@ -1600,13 +1615,14 @@ export class ReelPlayer {
     click('zoom-in', () => this.zoomAt(this.zoom * 1.25));
     click('zoom-reset', () => this.zoomAt(1));
     for (const action of navigationActions) click(action, () => this.navigate(action));
-    click('like', () => {
-      if (this.reel.kind === 'short' && !this.platform.canLikeInFullscreen())
-        void this.openNativePanel('like');
-      else this.activateNative('like');
-    });
+    for (const action of ['like', 'dislike']) {
+      click(action, () => {
+        if (this.isYouTube && !this.platform.canLikeInFullscreen()) void this.openNativePanel(action);
+        else this.activateNative(action);
+      });
+    }
     click('creator-follow', () => {
-      if (this.reel.kind === 'short') {
+      if (this.isYouTube) {
         void this.openNativePanel('subscribe');
         return;
       }
@@ -1908,6 +1924,7 @@ export class ReelPlayer {
   }
 
   connectKeys() {
+    let youtubeSpace;
     const actions = {
       k: () => this.togglePlay(),
       m: () => this.get('mute').click(),
@@ -1932,6 +1949,14 @@ export class ReelPlayer {
       window,
       'keydown',
       (event) => {
+        if (event.key === ' ') {
+          if (!event.repeat) youtubeSpace = undefined;
+          else if (youtubeSpace) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+          }
+        }
         if (event.ctrlKey || event.metaKey || event.isComposing) return;
         if (this.active && event.key === 'Tab') {
           this.stage.classList.remove('pointer-controls');
@@ -1949,6 +1974,18 @@ export class ReelPlayer {
           );
         const focus = this.ui.activeElement;
         const key = event.key.toLowerCase();
+        if (this.isYouTube && this.active && key === ' ' && !event.altKey) {
+          if (event.repeat || (editable && !focus)) return;
+          const control = focus?.matches('button,a,input,[role="slider"]');
+          youtubeSpace = control ? 'control' : 'playback';
+          event.stopImmediatePropagation();
+          if (!control) {
+            event.preventDefault();
+            this.togglePlay();
+            this.reveal();
+          }
+          return;
+        }
         if (this.active && (key === 'enter' || key === ' ') && event.target instanceof Element) {
           const action = event.target.closest(`[${storyActionAttribute}]`)?.getAttribute(storyActionAttribute);
           if (action === 'share') {
@@ -1961,13 +1998,16 @@ export class ReelPlayer {
         if (key === 'f' && !event.altKey && !event.shiftKey) {
           if (editable && !(this.active && focus?.matches('input[type="range"]'))) return;
           if (!this.active) {
-            if (this.reel?.kind === 'short') return;
             if (!this.canEnter()) return;
-            const dialogs = document.querySelectorAll('dialog[open], [role="dialog"][aria-modal="true"]');
+            const modal = 'dialog[open], [role="dialog"][aria-modal="true"]';
+            const dialogs = document.querySelectorAll(this.isYouTube
+              ? 'dialog[open], [role="dialog"], ytd-popup-container tp-yt-paper-dialog'
+              : modal);
             const blocked = Array.from(dialogs).some(
               (dialog) =>
                 !dialog.contains(this.storyGate?.card ?? this.media) &&
-                dialog.checkVisibility({ visibilityProperty: true }),
+                !dialog.closest('[hidden], [aria-hidden="true"]') &&
+                dialog.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
             );
             if (blocked) return;
           }
@@ -2025,6 +2065,15 @@ export class ReelPlayer {
       },
       { capture: true },
     );
+    // YouTube can toggle playback on release. Keep native activation for Voltura controls.
+    for (const type of ['keypress', 'keyup']) {
+      this.on(window, type, (event) => {
+        if (event.key !== ' ' || !youtubeSpace) return;
+        if (youtubeSpace === 'playback') event.preventDefault();
+        event.stopImmediatePropagation();
+        if (type === 'keyup') youtubeSpace = undefined;
+      }, { capture: true });
+    }
     this.on(window, 'keyup', (event) => {
       if (this.hold === event.key.toLowerCase()) {
         this.stopHold();

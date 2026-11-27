@@ -11,6 +11,16 @@ export function shortsPath(url) {
     : null;
 }
 
+export function watchPath(url) {
+  if (url.origin !== shortsOrigin || url.pathname !== '/watch') return null;
+  const id = new URLSearchParams(url.search).get('v');
+  return id && /^[\w-]{11}$/.test(id) ? `/watch?v=${id}` : null;
+}
+
+export function youtubePlaybackKey(url) {
+  return shortsPath(url) ?? watchPath(url);
+}
+
 export async function syncShortsAccess(api = chrome) {
   const enabled = await api.permissions.contains(shortsPermission);
   if (!enabled) await api.storage.local.remove(shortsEnabled);
