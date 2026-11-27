@@ -114,17 +114,9 @@ html[data-voltura-reel-fullscreen] :is([data-voltura-reel-video], [data-voltura-
   z-index: 2147483645 !important;
 }
 
-/* YouTube can show its own thumbnail or end screen behind the pinned video. */
-html:is([data-voltura-reel-fullscreen='short'], [data-voltura-reel-fullscreen='video'])::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: #070909;
-  pointer-events: none;
-  z-index: 2147483644;
-}
-
 html:is([data-voltura-reel-fullscreen='short'], [data-voltura-reel-fullscreen='video']) [data-voltura-reel-video] {
+  /* Paint the backdrop with the video to keep it behind the decoded frames. */
+  background-color: #070909 !important;
   display: block !important;
   opacity: 1 !important;
 }

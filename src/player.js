@@ -1924,6 +1924,7 @@ export class ReelPlayer {
   }
 
   connectKeys() {
+    let youtubeSpace;
     const actions = {
       k: () => this.togglePlay(),
       m: () => this.get('mute').click(),
@@ -1948,6 +1949,14 @@ export class ReelPlayer {
       window,
       'keydown',
       (event) => {
+        if (event.key === ' ') {
+          if (!event.repeat) youtubeSpace = undefined;
+          else if (youtubeSpace) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+          }
+        }
         if (event.ctrlKey || event.metaKey || event.isComposing) return;
         if (this.active && event.key === 'Tab') {
           this.stage.classList.remove('pointer-controls');
@@ -1965,6 +1974,18 @@ export class ReelPlayer {
           );
         const focus = this.ui.activeElement;
         const key = event.key.toLowerCase();
+        if (this.isYouTube && this.active && key === ' ' && !event.altKey) {
+          if (event.repeat || (editable && !focus)) return;
+          const control = focus?.matches('button,a,input,[role="slider"]');
+          youtubeSpace = control ? 'control' : 'playback';
+          event.stopImmediatePropagation();
+          if (!control) {
+            event.preventDefault();
+            this.togglePlay();
+            this.reveal();
+          }
+          return;
+        }
         if (this.active && (key === 'enter' || key === ' ') && event.target instanceof Element) {
           const action = event.target.closest(`[${storyActionAttribute}]`)?.getAttribute(storyActionAttribute);
           if (action === 'share') {
@@ -2044,6 +2065,15 @@ export class ReelPlayer {
       },
       { capture: true },
     );
+    // YouTube can toggle playback on release. Keep native activation for Voltura controls.
+    for (const type of ['keypress', 'keyup']) {
+      this.on(window, type, (event) => {
+        if (event.key !== ' ' || !youtubeSpace) return;
+        if (youtubeSpace === 'playback') event.preventDefault();
+        event.stopImmediatePropagation();
+        if (type === 'keyup') youtubeSpace = undefined;
+      }, { capture: true });
+    }
     this.on(window, 'keyup', (event) => {
       if (this.hold === event.key.toLowerCase()) {
         this.stopHold();

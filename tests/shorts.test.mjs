@@ -95,8 +95,9 @@ test('playback binds only to ready media in the active Shorts renderer', () => {
   const bounds = { width: 360, height: 620, top: 50, left: 125, right: 485, bottom: 670 };
   const card = { checkVisibility: () => true, closest: () => null };
   const title = { href: short };
+  let renderer = 'ytd-reel-video-renderer';
   const wrapper = {
-    closest: () => card,
+    closest: (selector) => selector.split(',').some((tag) => tag.trim() === renderer) ? card : null,
     matches: () => false,
     querySelector(selector) {
       if (selector === 'video.html5-main-video') return media;
@@ -113,7 +114,12 @@ test('playback binds only to ready media in the active Shorts renderer', () => {
     };
     assert.equal(findShortsPlayback(viewer, '/shorts/-dEzGR3Vlck').video, media);
     assert.equal(findShortsPlayback(viewer, '/shorts/fixture0002'), null);
+    renderer = 'ytd-reel-video-renderer-cow';
+    const reel = findShortsPlayback(viewer, '/shorts/-dEzGR3Vlck');
+    assert.equal(reel?.video, media);
+    assert.equal(youtubePlayer.isCurrent(reel), true);
     title.href = 'https://www.youtube.com/shorts/fixture0002';
+    assert.equal(youtubePlayer.isCurrent(reel), false);
     assert.equal(findShortsPlayback(viewer, '/shorts/fixture0002').video, media);
     wrapper.matches = () => true;
     assert.equal(findShortsPlayback(viewer, '/shorts/fixture0002'), null);

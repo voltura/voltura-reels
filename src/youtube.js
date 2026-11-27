@@ -5,6 +5,7 @@ export const adPlayback = '.ad-showing, .ad-interrupting';
 const watchUnavailable = `${adPlayback}, .ytp-live, .ytp-player-minimized`;
 const hiddenControl = '[hidden], [inert], [aria-hidden="true"]';
 const mainVideo = 'video.html5-main-video';
+const shortsRenderer = 'ytd-reel-video-renderer, ytd-reel-video-renderer-cow';
 const actionLabels = {
   comments: /^(?:comments|view (?:[\d.,\s]+ )?comments|kommentarer|visa (?:[\d.,\s]+ )?kommentarer)$/i,
   share: /^(share|dela)$/i,
@@ -28,7 +29,7 @@ function playbackBounds(wrapper) {
 
 export function findShortsPlayback(viewer, key) {
   const wrapper = viewer?.querySelector('#shorts-player');
-  const card = wrapper?.closest('ytd-reel-video-renderer');
+  const card = wrapper?.closest(shortsRenderer);
   const video = card && wrapper.querySelector(mainVideo);
   if (!video || !video.readyState || !video.videoWidth || activeShortPath(wrapper) !== key ||
       wrapper.matches(adPlayback) || card.closest(hiddenControl) ||
@@ -148,7 +149,7 @@ export const youtubePlayer = {
       return reel.viewer.querySelector('#movie_player') === reel.wrapper &&
         reel.wrapper.querySelector(mainVideo) === reel.video && currentWatch(reel);
     }
-    return reel.wrapper.closest('ytd-reel-video-renderer') === reel.card &&
+    return reel.wrapper.closest(shortsRenderer) === reel.card &&
       !reel.wrapper.matches(adPlayback) && activeShortPath(reel.wrapper) === reel.key;
   },
   canLikeInFullscreen: () => Boolean(document.querySelector('ytd-masthead #avatar-btn')),
